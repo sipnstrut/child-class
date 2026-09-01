@@ -1,0 +1,15 @@
+{
+  "name": "child-class",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Build tooling for the Child Class Foundry VTT module.",
+  "scripts": {
+    "generate": "node build/generate.mjs",
+    "pack": "npm run generate && node build/pack.mjs pack",
+    "unpack": "node build/pack.mjs unpack"
+  },
+  "devDependencies": {
+    "@foundryvtt/foundryvtt-cli": "^1.0.0"
+  }
+}

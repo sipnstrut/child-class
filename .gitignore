@@ -1,0 +1,8 @@
+packs/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+
+# Per-machine Claude Code permissions (settings.json would be shared; .local is personal).
+.claude/settings.local.json

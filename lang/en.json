@@ -1,0 +1,35 @@
+{
+  "CHILDCLASS.Variant.Child14": "Child ('14 rules)",
+  "CHILDCLASS.Variant.Child24": "Child ('24 rules)",
+
+  "CHILDCLASS.Feature.Unexceptional": "Unexceptional",
+  "CHILDCLASS.Feature.Unremarkable": "Unremarkable",
+
+  "CHILDCLASS.Settings.AbilityRule.Name": "Ability score generation rule",
+  "CHILDCLASS.Settings.AbilityRule.Hint": "Which dice a new Child rolls for ability scores. Unexceptional is wider (6+1d6 → 7-12 per score); Unremarkable is tighter (7+1d4 → 8-11). Existing Children keep the rule they were rolled under, even if this setting changes later.",
+  "CHILDCLASS.Settings.AbilityRule.Unexceptional": "Unexceptional (6+1d6)",
+  "CHILDCLASS.Settings.AbilityRule.Unremarkable": "Unremarkable (7+1d4)",
+
+  "CHILDCLASS.Settings.XpScale.Name": "XP progression",
+  "CHILDCLASS.Settings.XpScale.Hint": "How much XP the Child's five levels cost total. Raw-aligned (300) lands a Knack-matched graduate at exactly the RAW level-2 threshold with no reconciliation; compressed (100) is rounder but requires the DM to scale monster XP awards down by ~3x.",
+  "CHILDCLASS.Settings.XpScale.RawAligned": "Raw-aligned (0/30/75/135/210/300)",
+  "CHILDCLASS.Settings.XpScale.Compressed": "Compressed (0/10/25/45/70/100)",
+
+  "CHILDCLASS.Settings.XpOnGraduation.Name": "XP handling at graduation",
+  "CHILDCLASS.Settings.XpOnGraduation.Hint": "Default XP mode offered in the graduation dialog. Reset uses the RAW minimum for the new character level; carry keeps the Child's total; milestone zeroes it.",
+  "CHILDCLASS.Settings.XpOnGraduation.Reset": "Reset to RAW minimum",
+  "CHILDCLASS.Settings.XpOnGraduation.Carry": "Carry Child total",
+  "CHILDCLASS.Settings.XpOnGraduation.Milestone": "Milestone (no XP)",
+
+  "CHILDCLASS.Settings.HealOnGraduation.Name": "Full HP on graduation",
+  "CHILDCLASS.Settings.HealOnGraduation.Hint": "Set current HP to the new max after graduating. Off preserves damage taken as a Child.",
+
+  "CHILDCLASS.Settings.EnforceMulticlassBlock.Name": "Enforce multiclass block",
+  "CHILDCLASS.Settings.EnforceMulticlassBlock.Hint": "Block a Child from taking a second class and prevent non-Children from taking a Child level. Turn off only if your table means to break the rules.",
+
+  "CHILDCLASS.Settings.SnapshotRetentionDays.Name": "Graduation snapshot retention (days)",
+  "CHILDCLASS.Settings.SnapshotRetentionDays.Hint": "How many days the pre-graduation snapshot is kept before the Undo option disappears. 0 = never auto-clear.",
+
+  "CHILDCLASS.Settings.AllowMixedEditions.Name": "Allow mixed editions in one world",
+  "CHILDCLASS.Settings.AllowMixedEditions.Hint": "Whether one world may contain both '14 and '24 Children. Off enforces a single edition per world. A single actor may never hold both editions regardless of this setting."
+}

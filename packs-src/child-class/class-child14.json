@@ -1,0 +1,25 @@
+{
+  "_id": "child14class0000",
+  "_key": "!items!child14class0000",
+  "name": "Child '14",
+  "type": "class",
+  "img": "icons/skills/social/diplomacy-handshake.webp",
+  "effects": [],
+  "system": {
+    "identifier": "child14",
+    "levels": 1,
+    "hitDice": "d4",
+    "hd": {
+      "denomination": "d4",
+      "additional": "-@item.levels"
+    },
+    "source": {
+      "rules": "2014"
+    },
+    "description": {
+      "value": "<p>CHILDCLASS.Variant.Child14</p>",
+      "chat": ""
+    },
+    "advancement": {}
+  }
+}
