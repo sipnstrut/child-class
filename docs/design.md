@@ -181,7 +181,7 @@ child-class/
 │   ├── proficiency.mjs            # § 5.2 prof bonus override
 │   ├── ability-rules.mjs          # § 5.3 ABILITY_RULES registry
 │   ├── ability-gen.mjs            # § 5.3 roll + apply flow
-│   ├── growth.mjs                 # § 5.5 level-4 Growth
+│   ├── growth.mjs                 # § 5.7 level-4 Growth
 │   ├── knack.mjs                  # § 5.4 knack flag + downstream grants
 │   ├── graduation/
 │   │   ├── detect.mjs             # intercept level 6
