@@ -1,0 +1,67 @@
+{
+  "_id": "featYouth0000000",
+  "_key": "!items!featYouth0000000",
+  "name": "Youth",
+  "type": "feat",
+  "img": "icons/svg/regen.svg",
+  "system": {
+    "type": {
+      "value": "class",
+      "subtype": ""
+    },
+    "description": {
+      "value": "<p><em>Level 1 Child feature.</em></p><p>Once per long rest, during a short rest, you may recover hit points equal to half your maximum HP, <strong>rounded up</strong>. Lost on graduation.</p>",
+      "chat": ""
+    },
+    "activities": {
+      "actYouthHeal0000": {
+        "_id": "actYouthHeal0000",
+        "type": "heal",
+        "name": "Youthful Recovery",
+        "img": "icons/svg/regen.svg",
+        "activation": {
+          "type": "special",
+          "value": null,
+          "condition": "During a short rest."
+        },
+        "consumption": {
+          "targets": [
+            {
+              "type": "activityUses",
+              "target": "",
+              "value": "1"
+            }
+          ],
+          "scaling": {
+            "allowed": false,
+            "max": ""
+          }
+        },
+        "uses": {
+          "spent": 0,
+          "max": "1",
+          "recovery": [
+            {
+              "period": "lr",
+              "type": "recoverAll",
+              "formula": ""
+            }
+          ]
+        },
+        "healing": {
+          "bonus": "",
+          "custom": {
+            "enabled": true,
+            "formula": "ceil(@attributes.hp.max / 2)"
+          },
+          "types": [
+            "healing"
+          ]
+        }
+      }
+    },
+    "source": {
+      "rules": "2014"
+    }
+  }
+}

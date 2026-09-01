@@ -1,0 +1,101 @@
+{
+  "_id": "k14druid00000000",
+  "_key": "!items!k14druid00000000",
+  "name": "Knack '14: Druid",
+  "type": "feat",
+  "img": "icons/skills/trades/academics-study-reading-book.webp",
+  "effects": [],
+  "system": {
+    "type": {
+      "value": "class",
+      "subtype": ""
+    },
+    "description": {
+      "value": "<p>Aspiring Druid (d8 hit die). Grants a bonus feat at Child level 2, one skill and one saving throw proficiency at level 3, and one weapon or shield proficiency at level 5. Lost on graduation except where noted (§ 5.4, § 5.6, § 5.8).</p>",
+      "chat": ""
+    },
+    "source": {
+      "rules": "2014"
+    },
+    "advancement": {
+      "advFeatPick00000": {
+        "_id": "advFeatPick00000",
+        "type": "ItemChoice",
+        "level": 2,
+        "title": "Knack Bonus Feat",
+        "hint": "Choose one: Magic Initiate: Druid or Poisoner. The Prepare Knack Feats setup workflow (§ 7.2, step 5b) will populate the pool with the correct UUIDs; until then, drag in the feat from your own compendia.",
+        "configuration": {
+          "allowDrops": true,
+          "choices": {
+            "2": {
+              "count": 1,
+              "replacement": false
+            }
+          },
+          "pool": [],
+          "type": "feat"
+        }
+      },
+      "advSkillOne00000": {
+        "_id": "advSkillOne00000",
+        "type": "Trait",
+        "level": 3,
+        "title": "Mentor's Knowledge (Skill)",
+        "hint": "Choose one skill proficiency from the Druid skill list.",
+        "configuration": {
+          "choices": [
+            {
+              "count": 1,
+              "pool": [
+                "skills:arc",
+                "skills:ani",
+                "skills:ins",
+                "skills:med",
+                "skills:nat",
+                "skills:prc",
+                "skills:rel",
+                "skills:sur"
+              ]
+            }
+          ]
+        }
+      },
+      "advSaveOne000000": {
+        "_id": "advSaveOne000000",
+        "type": "Trait",
+        "level": 3,
+        "title": "Mentor's Knowledge (Save)",
+        "hint": "Choose one saving throw proficiency from the Druid class list.",
+        "configuration": {
+          "choices": [
+            {
+              "count": 1,
+              "pool": [
+                "saves:int",
+                "saves:wis"
+              ]
+            }
+          ]
+        }
+      },
+      "advWeaponOne0000": {
+        "_id": "advWeaponOne0000",
+        "type": "Trait",
+        "level": 5,
+        "title": "Trade Skill (Weapon / Shield)",
+        "hint": "Choose one weapon or shield proficiency from the Druid class list. Lost on graduation.",
+        "configuration": {
+          "choices": [
+            {
+              "count": 1,
+              "pool": [
+                "weapon:sim",
+                "armor:shl"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

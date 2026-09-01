@@ -20,6 +20,93 @@
       "value": "<p>CHILDCLASS.Variant.Child24</p>",
       "chat": ""
     },
-    "advancement": {}
+    "advancement": {
+      "advGrantYouth000": {
+        "_id": "advGrantYouth000",
+        "type": "ItemGrant",
+        "level": 1,
+        "title": "Youth",
+        "configuration": {
+          "items": [
+            {
+              "uuid": "Compendium.child-class.child-features.Item.featYouth0000000"
+            }
+          ],
+          "optional": false
+        }
+      },
+      "advGrantTrade000": {
+        "_id": "advGrantTrade000",
+        "type": "ItemGrant",
+        "level": 5,
+        "title": "Trade Skill",
+        "configuration": {
+          "items": [
+            {
+              "uuid": "Compendium.child-class.child-features.Item.featTradeSkill00"
+            }
+          ],
+          "optional": false
+        }
+      },
+      "advKnackPick0000": {
+        "_id": "advKnackPick0000",
+        "type": "ItemChoice",
+        "level": 2,
+        "title": "Knack",
+        "hint": "Pick a class you aspire to. Its Knack item carries the bonus feat, skill, save, and weapon proficiencies granted at levels 2, 3, and 5.",
+        "configuration": {
+          "allowDrops": false,
+          "choices": {
+            "2": {
+              "count": 1,
+              "replacement": false
+            }
+          },
+          "pool": [
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24barbarian0000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24bard000000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24cleric0000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24druid00000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24fighter000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24monk000000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24paladin000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24ranger0000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24rogue00000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24sorcerer00000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24warlock000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24wizard0000000"
+            },
+            {
+              "uuid": "Compendium.child-class.child-knacks.Item.k24artificer0000"
+            }
+          ],
+          "type": "feat"
+        }
+      }
+    }
   }
 }

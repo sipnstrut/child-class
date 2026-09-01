@@ -1,0 +1,40 @@
+{
+  "_id": "featTradeSkill00",
+  "_key": "!items!featTradeSkill00",
+  "name": "Trade Skill",
+  "type": "feat",
+  "img": "icons/skills/trades/smithing-anvil-silver-red.webp",
+  "system": {
+    "type": {
+      "value": "class",
+      "subtype": ""
+    },
+    "description": {
+      "value": "<p><em>Level 5 Child feature.</em></p><ul>\n<li>Gain proficiency with <strong>one tool set or language</strong> of your choice. <em>Retained on graduation.</em></li>\n<li>Gain proficiency with <strong>one weapon or shield</strong> from your Knack class's list. <em>Lost on graduation.</em> (Granted via your Knack item.)</li>\n<li>Roll <strong>2d&lt;Knack hit die&gt;</strong> and gain that many gold pieces.</li>\n<li>Gain <strong>one item</strong> the character is proficient with (compendium prompt).</li>\n</ul>",
+      "chat": ""
+    },
+    "advancement": {
+      "advTsToolLang000": {
+        "_id": "advTsToolLang000",
+        "type": "Trait",
+        "level": 5,
+        "title": "Trade Skill (Tool / Language)",
+        "hint": "Choose one tool proficiency or one language. Retained on graduation.",
+        "configuration": {
+          "choices": [
+            {
+              "count": 1,
+              "pool": [
+                "tool:*",
+                "languages:*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "source": {
+      "rules": "2014"
+    }
+  }
+}
