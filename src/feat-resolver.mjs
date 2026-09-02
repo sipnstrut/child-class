@@ -65,14 +65,20 @@ export async function resolveFeat(name, { edition, source } = {}) {
 
 function rankCandidates(cands, { edition, source }) {
   return cands.slice().sort((a, b) => {
-    const aEd = a.rules === edition ? 1 : 0;
-    const bEd = b.rules === edition ? 1 : 0;
-    if (aEd !== bEd) return bEd - aEd;
+    // When the knackTable entry marks a specific source (currently only
+    // `source: "tasha"`), a matching source pack trumps edition match —
+    // e.g. '24 Sorcerer Knack calls for Metamagic Adept from TCE, which
+    // is a 2014-edition item; that TCE match is more faithful than a
+    // 2024-edition item that happens to share the name.
     if (source === "tasha") {
       const aTce = looksTce(a) ? 1 : 0;
       const bTce = looksTce(b) ? 1 : 0;
       if (aTce !== bTce) return bTce - aTce;
     }
+    // Otherwise prefer items whose source rules match the actor's edition.
+    const aEd = a.rules === edition ? 1 : 0;
+    const bEd = b.rules === edition ? 1 : 0;
+    if (aEd !== bEd) return bEd - aEd;
     return 0;
   });
 }

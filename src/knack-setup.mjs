@@ -22,6 +22,8 @@ export function registerKnackSetup() {
     module.api ??= {};
     module.api.prepareKnackFeats = openDialog;
     module.api.createStubFeats = createStubFeats;
+    module.api.fixPlutoniumLockedFeats = fixPlutoniumLockedFeats;
+    module.api.fixPlutoniumOverpointedASIs = fixPlutoniumOverpointedASIs;
   }
   // On first load in a world where the map has never been populated, nudge
   // the GM once. Skip on subsequent loads regardless of resolution status —
@@ -191,5 +193,148 @@ function collectFeatNames() {
     }
   }
   return [...names].sort();
+}
+
+// Plutonium's feat importer writes `locked` on AbilityScoreImprovement
+// advancements with the semantic "these are the abilities the feat commits
+// to" — but dnd5e reads `locked` as "these abilities are excluded from
+// selection". Result: a "+1 STR or DEX" feat imports as "spend on anything
+// EXCEPT STR/DEX." This helper inverts that field on any ASI advancement in
+// the stub compendium where `locked` has 1-3 entries (Plutonium's signature —
+// hand-authored ASIs usually have `locked: []`). Safe to re-run; already-
+// inverted ASIs won't match the 1-3 signature anymore.
+const STUB_PACK = `world.${STUB_PACK_NAME}`;
+const ALL_ABILITIES = ["str", "dex", "con", "int", "wis", "cha"];
+
+async function fixPlutoniumLockedFeats(packId = STUB_PACK) {
+  if (!game.user.isGM) {
+    ui.notifications?.warn("Only GMs can fix imported feats.");
+    return;
+  }
+  const pack = game.packs.get(packId);
+  if (!pack) {
+    ui.notifications?.warn(`Pack "${packId}" not found.`);
+    return;
+  }
+  const docs = await pack.getDocuments();
+
+  const changes = [];
+  for (const doc of docs) {
+    if (doc.type !== "feat") continue;
+    const advancement = doc._source?.system?.advancement;
+    if (!advancement) continue;
+    for (const [advId, adv] of Object.entries(advancement)) {
+      if (adv.type !== "AbilityScoreImprovement") continue;
+      const locked = adv.configuration?.locked;
+      if (!Array.isArray(locked)) continue;
+      if (locked.length < 1 || locked.length > 3) continue;
+      const inverted = ALL_ABILITIES.filter(a => !locked.includes(a));
+      changes.push({
+        doc,
+        advId,
+        name: doc.name,
+        was: [...locked],
+        becomes: inverted
+      });
+    }
+  }
+
+  if (!changes.length) {
+    ui.notifications?.info("No Plutonium-locked ASI advancements to fix.");
+    return;
+  }
+
+  const rows = changes.map(c =>
+    `<tr><td>${escape(c.name)}</td><td><code>[${c.was.join(", ")}]</code></td><td>→ <code>[${c.becomes.join(", ")}]</code></td></tr>`
+  ).join("");
+  const confirmed = await foundry.applications.api.DialogV2.confirm({
+    window: { title: "Fix Plutonium-locked ASI Advancements" },
+    content: `
+      <div>
+        <p>Found <strong>${changes.length}</strong> ASI advancement(s) with the inverted-<code>locked</code> signature. Apply the fix?</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+          <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666);"><th style="text-align:left;">Feat</th><th style="text-align:left;">Was</th><th style="text-align:left;">Becomes</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p style="font-size: 0.9em; color: var(--color-text-secondary, #888); margin-top: 8px;">
+          Each fix swaps <code>locked</code> to the complement of the current list. Re-running is idempotent — already-fixed items have all-six or no locked entries and are skipped.
+        </p>
+      </div>
+    `
+  });
+  if (!confirmed) return;
+
+  for (const c of changes) {
+    await c.doc.update({
+      [`system.advancement.${c.advId}.configuration.locked`]: c.becomes
+    });
+  }
+  ui.notifications?.info(`Fixed ${changes.length} feat ASI advancement(s).`);
+  console.log(`[child-class] Fixed ${changes.length} Plutonium-locked ASI feats.`);
+}
+
+// Companion to the locked-inversion fix: Plutonium's imports sometimes set
+// BOTH `fixed` (auto-grant) AND `points` (spend more) on the same ASI, so
+// Durable ends up as "+1 CON auto plus one more anywhere" instead of the
+// RAW "+1 CON only." This helper zeroes `points` on any ASI where `fixed`
+// already grants ≥ 1 point. Signature makes it safe to co-exist with the
+// locked-inversion pass — different fields, different heuristic.
+async function fixPlutoniumOverpointedASIs(packId = STUB_PACK) {
+  if (!game.user.isGM) {
+    ui.notifications?.warn("Only GMs can fix imported feats.");
+    return;
+  }
+  const pack = game.packs.get(packId);
+  if (!pack) {
+    ui.notifications?.warn(`Pack "${packId}" not found.`);
+    return;
+  }
+  const docs = await pack.getDocuments();
+
+  const changes = [];
+  for (const doc of docs) {
+    if (doc.type !== "feat") continue;
+    const advancement = doc._source?.system?.advancement;
+    if (!advancement) continue;
+    for (const [advId, adv] of Object.entries(advancement)) {
+      if (adv.type !== "AbilityScoreImprovement") continue;
+      const points = adv.configuration?.points ?? 0;
+      const fixed = adv.configuration?.fixed ?? {};
+      const fixedTotal = ALL_ABILITIES.reduce((sum, a) => sum + (fixed[a] ?? 0), 0);
+      if (points > 0 && fixedTotal >= 1) {
+        changes.push({ doc, advId, name: doc.name, wasPoints: points, fixedTotal });
+      }
+    }
+  }
+
+  if (!changes.length) {
+    ui.notifications?.info("No overpointed ASI advancements to fix.");
+    return;
+  }
+
+  const rows = changes.map(c =>
+    `<tr><td>${escape(c.name)}</td><td><code>points: ${c.wasPoints}</code>, <code>fixed total: ${c.fixedTotal}</code></td><td>→ <code>points: 0</code></td></tr>`
+  ).join("");
+  const confirmed = await foundry.applications.api.DialogV2.confirm({
+    window: { title: "Fix Overpointed ASI Advancements" },
+    content: `
+      <div>
+        <p>Found <strong>${changes.length}</strong> ASI advancement(s) where <code>fixed</code> already grants at least 1 point AND <code>points</code> is non-zero (Plutonium's double-grant signature). Zero out <code>points</code>?</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+          <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666);"><th style="text-align:left;">Feat</th><th style="text-align:left;">Was</th><th style="text-align:left;">Becomes</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `
+  });
+  if (!confirmed) return;
+
+  for (const c of changes) {
+    await c.doc.update({
+      [`system.advancement.${c.advId}.configuration.points`]: 0
+    });
+  }
+  ui.notifications?.info(`Fixed ${changes.length} overpointed ASI advancement(s).`);
+  console.log(`[child-class] Fixed ${changes.length} Plutonium-overpointed ASI feats.`);
 }
 
