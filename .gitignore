@@ -6,3 +6,4 @@ Thumbs.db
 
 # Per-machine Claude Code permissions (settings.json would be shared; .local is personal).
 .claude/settings.local.json
+child-class.zip
