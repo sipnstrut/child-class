@@ -88,7 +88,19 @@
             {
               "count": 1,
               "pool": [
-                "weapon:sim"
+                "weapon:club",
+                "weapon:dagger",
+                "weapon:dart",
+                "weapon:greatclub",
+                "weapon:handaxe",
+                "weapon:javelin",
+                "weapon:lighthammer",
+                "weapon:mace",
+                "weapon:quarterstaff",
+                "weapon:sickle",
+                "weapon:spear",
+                "weapon:lightcrossbow",
+                "weapon:sling"
               ]
             }
           ]

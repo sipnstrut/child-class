@@ -89,7 +89,16 @@
             {
               "count": 1,
               "pool": [
-                "weapon:sim",
+                "weapon:club",
+                "weapon:dagger",
+                "weapon:dart",
+                "weapon:javelin",
+                "weapon:mace",
+                "weapon:quarterstaff",
+                "weapon:scimitar",
+                "weapon:sickle",
+                "weapon:sling",
+                "weapon:spear",
                 "armor:shl"
               ]
             }

@@ -87,7 +87,11 @@
             {
               "count": 1,
               "pool": [
-                "weapon:sim"
+                "weapon:dagger",
+                "weapon:dart",
+                "weapon:sling",
+                "weapon:quarterstaff",
+                "weapon:lightcrossbow"
               ]
             }
           ]

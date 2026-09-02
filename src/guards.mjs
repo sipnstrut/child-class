@@ -19,6 +19,7 @@
 
 import { MODULE_ID } from "./config.mjs";
 import { CHILD_VARIANTS } from "./variants/index.mjs";
+import { triggerGraduation } from "./graduation.mjs";
 
 const CHILD_LEVEL_CAP = 5;
 const KNACK_ID_RE = /^k(14|24)([a-z]+)0*$/;
@@ -65,8 +66,17 @@ function enforceLevelCap(item, changes) {
   if (!(id in CHILD_VARIANTS)) return;
   const newLevels = foundry.utils.getProperty(changes, "system.levels");
   if (newLevels === undefined || newLevels <= CHILD_LEVEL_CAP) return;
+
+  // 5 → 6 attempts open the graduation dialog and cancel the level bump.
+  // Any other level attempt above 5 (like 3 → 8, direct edit) is clamped
+  // with a warning; graduation only fires from a legitimate 5 → 6 step.
+  const currentLevels = item.system?.levels ?? 0;
+  if (currentLevels === CHILD_LEVEL_CAP && newLevels === CHILD_LEVEL_CAP + 1) {
+    triggerGraduation(item.parent, item);
+    return false;
+  }
   ui.notifications?.warn(
-    `The Child class is capped at level ${CHILD_LEVEL_CAP}. Graduation is not yet implemented; leveling past ${CHILD_LEVEL_CAP} will open the graduation dialog once step 9 lands.`
+    `The Child class is capped at level ${CHILD_LEVEL_CAP}. Use graduation to advance beyond level ${CHILD_LEVEL_CAP} (level up to ${CHILD_LEVEL_CAP + 1} from ${CHILD_LEVEL_CAP} to trigger).`
   );
   foundry.utils.setProperty(changes, "system.levels", CHILD_LEVEL_CAP);
 }

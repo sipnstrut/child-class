@@ -57,6 +57,7 @@ const ADV_TS_TOOLLANG   = padId("advTsToolLang");
 // Feature item ids — shared across editions (features are edition-agnostic).
 const FEATURE_YOUTH_ID = padId("featYouth");
 const FEATURE_TRADE_ID = padId("featTradeSkill");
+const FEATURE_GRADUATE_ID = padId("featGraduate");
 
 // Map dnd5e '14 -> edition key used in knack ids. Kept trivial so step 12
 // (child24 Knacks) can extend without ambiguity.
@@ -381,6 +382,37 @@ function tradeSkillFeature() {
   };
 }
 
+// § 6 Graduate keepsake. Granted by the graduation flow, not by class-level
+// advancement — its purpose is to leave a visible record on the sheet of
+// what the character carried out of Child. Static description; the specific
+// Knack / feat / proficiency the character retained are already visible as
+// their own items on the sheet.
+function graduateFeature() {
+  return {
+    _id: FEATURE_GRADUATE_ID,
+    _key: itemKey(FEATURE_GRADUATE_ID),
+    name: "Graduate",
+    type: "feat",
+    img: "icons/skills/social/diplomacy-handshake.webp",
+    system: {
+      type: { value: "class", subtype: "" },
+      description: {
+        value: `<p><em>Graduated from the Child class.</em></p>
+<p>You retain from your childhood:</p>
+<ul>
+<li>The bonus feat you chose during your Knack (kept as a normal feat — a pure bonus, consuming no ASI or Origin slot).</li>
+<li>The tool set or language proficiency you gained from Trade Skill.</li>
+<li>All ability scores, including any increases from Growth at level 4.</li>
+<li>All items and gold you gathered as a Child.</li>
+</ul>
+<p>To continue building your character, drag a class from the compendium onto your sheet — dnd5e's normal advancement flow will apply. If you graduated into the class matching your Knack, your Child XP total will place you at level 2 automatically.</p>`,
+        chat: ""
+      },
+      source: { rules: "2014" }
+    }
+  };
+}
+
 /* ------------------------------- Emit + housekeeping -------------------------- */
 
 // RAW variants (pre-`extends` resolution) — used to distinguish "owns its own
@@ -444,7 +476,7 @@ mkdirSync(FEATURES_DIR, { recursive: true });
 cleanDir(FEATURES_DIR);
 
 let featureCount = 0;
-for (const feature of [youthFeature(), tradeSkillFeature()]) {
+for (const feature of [youthFeature(), tradeSkillFeature(), graduateFeature()]) {
   writeFileSync(join(FEATURES_DIR, `${feature.name.toLowerCase().replace(/\s+/g, "-")}.json`),
     JSON.stringify(feature, null, 2) + "\n");
   featureCount++;

@@ -9,6 +9,7 @@ import { registerXp } from "./xp.mjs";
 import { registerTradeSkill } from "./trade-skill.mjs";
 import { registerYouth } from "./youth.mjs";
 import { registerReset } from "./reset.mjs";
+import { registerGraduation } from "./graduation.mjs";
 
 Hooks.once("init", () => {
   registerSettings();
@@ -33,4 +34,5 @@ Hooks.once("ready", () => {
   registerTradeSkill();
   registerYouth();
   registerReset();
+  registerGraduation();
 });

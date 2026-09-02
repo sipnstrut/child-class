@@ -1,0 +1,20 @@
+{
+  "_id": "featGraduate0000",
+  "_key": "!items!featGraduate0000",
+  "name": "Graduate",
+  "type": "feat",
+  "img": "icons/skills/social/diplomacy-handshake.webp",
+  "system": {
+    "type": {
+      "value": "class",
+      "subtype": ""
+    },
+    "description": {
+      "value": "<p><em>Graduated from the Child class.</em></p>\n<p>You retain from your childhood:</p>\n<ul>\n<li>The bonus feat you chose during your Knack (kept as a normal feat — a pure bonus, consuming no ASI or Origin slot).</li>\n<li>The tool set or language proficiency you gained from Trade Skill.</li>\n<li>All ability scores, including any increases from Growth at level 4.</li>\n<li>All items and gold you gathered as a Child.</li>\n</ul>\n<p>To continue building your character, drag a class from the compendium onto your sheet — dnd5e's normal advancement flow will apply. If you graduated into the class matching your Knack, your Child XP total will place you at level 2 automatically.</p>",
+      "chat": ""
+    },
+    "source": {
+      "rules": "2014"
+    }
+  }
+}

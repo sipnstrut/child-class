@@ -30,35 +30,95 @@ export function registerKnackPool() {
   });
 }
 
-// Override `ItemChoiceFlow.prototype.featureLevel` so that when the flow is
-// rendering our Knack Bonus Feat picker (advancement _id starts with
-// `advFeatPick`), it returns a large number instead of the Child's class
-// level. That defeats dnd5e's `prerequisites.level` filter (dnd5e.mjs
-// 41136 + 75754), which otherwise drops 2024 General feats at Child level 2.
-// Doing this via `Object.defineProperty` rather than libWrapper because
-// featureLevel is a getter, and libWrapper only wraps methods.
+// Bypass ALL feat prerequisites (level, item, repeatable) when the flow is
+// rendering our Knack Bonus Feat picker. Per design § 5.4: "The Knack grants
+// a feat at Child level 2 and explicitly ignores prerequisites." Two wraps:
+//
+//   - `ItemChoiceFlow.prototype._prepareContentContext` — sets a module-scoped
+//     "we're inside a Knack feat picker render" flag while the wrapped call
+//     executes.
+//   - `FeatData.prototype.validatePrerequisites` — short-circuits to `true`
+//     when that flag is set. Because Foundry is single-threaded within a
+//     render pass, the flag is safe even though _prepareContentContext is
+//     async: the flag is only observed by synchronous validatePrerequisites
+//     calls that happen during the same task.
+let inKnackFeatPickerRender = false;
+
 function patchFeatureLevelForKnackFeatPickers() {
-  const flowProto = CONFIG.DND5E?.advancementTypes?.ItemChoice?.documentClass
-    ?.metadata?.apps?.flow?.prototype;
-  if (!flowProto) {
-    console.warn("[child-class] Cannot patch ItemChoiceFlow.featureLevel — flow prototype not found.");
+  const flowClass = CONFIG.DND5E?.advancementTypes?.ItemChoice?.documentClass
+    ?.metadata?.apps?.flow;
+  if (!flowClass?.prototype?._prepareContentContext) {
+    console.warn("[child-class] Cannot patch ItemChoiceFlow — flow class not found via CONFIG path.");
     return;
   }
-  const original = Object.getOwnPropertyDescriptor(flowProto, "featureLevel")?.get;
-  if (!original) {
-    console.warn("[child-class] ItemChoiceFlow.featureLevel getter not found.");
-    return;
-  }
-  Object.defineProperty(flowProto, "featureLevel", {
-    configurable: true,
-    get() {
-      if (this.advancement?._id?.startsWith("advFeatPick")) {
-        // § 5.4 — ignore item-level prerequisites for the Knack Bonus Feat pool.
-        return Number.MAX_SAFE_INTEGER;
+
+  // Direct prototype patch rather than libWrapper string paths, because the
+  // CONFIG.DND5E.advancementTypes chain includes `metadata` which is a
+  // static object literal — the libWrapper string evaluator sometimes can't
+  // follow that. Monkey-patching directly is louder but works reliably.
+  const flowProto = flowClass.prototype;
+  const originalPrep = flowProto._prepareContentContext;
+  flowProto._prepareContentContext = async function(...args) {
+    if (this.advancement?._id?.startsWith("advFeatPick")) {
+      console.log("[child-class] Knack feat picker render — bypassing prereqs.");
+      inKnackFeatPickerRender = true;
+      try {
+        return await originalPrep.apply(this, args);
+      } finally {
+        inKnackFeatPickerRender = false;
       }
-      return original.call(this);
     }
-  });
+    return originalPrep.apply(this, args);
+  };
+
+  // Patch the feat data model's validatePrerequisites to short-circuit while
+  // the flag is set. Try both dnd5e.dataModels.item.FeatData and
+  // CONFIG.Item.dataModels.feat — different dnd5e minor versions expose it
+  // under different paths.
+  const featModel = globalThis.dnd5e?.dataModels?.item?.FeatData
+    ?? CONFIG.Item?.dataModels?.feat;
+  if (!featModel?.prototype?.validatePrerequisites) {
+    console.warn("[child-class] Cannot patch FeatData.validatePrerequisites — model not found at dnd5e.dataModels.item.FeatData or CONFIG.Item.dataModels.feat.");
+    return;
+  }
+  const originalValidate = featModel.prototype.validatePrerequisites;
+  featModel.prototype.validatePrerequisites = function(...args) {
+    if (inKnackFeatPickerRender) {
+      return true;
+    }
+    return originalValidate.apply(this, args);
+  };
+
+  // Also skip the ItemChoiceAdvancement's own `_evaluatePrerequisites` for our
+  // advancements (fires on apply, dnd5e.mjs:42040), and wrap `restore` to set
+  // the render flag around its execution — restore has its own
+  // `validatePrerequisites(..., throwError: true)` call at 42064 that would
+  // otherwise throw AdvancementError and abort the flow.
+  const advancementClass = CONFIG.DND5E?.advancementTypes?.ItemChoice?.documentClass;
+  if (advancementClass?.prototype?._evaluatePrerequisites) {
+    const originalEval = advancementClass.prototype._evaluatePrerequisites;
+    advancementClass.prototype._evaluatePrerequisites = async function(...args) {
+      if (this._id?.startsWith("advFeatPick")) {
+        return;
+      }
+      return originalEval.apply(this, args);
+    };
+  }
+  if (advancementClass?.prototype?.restore) {
+    const originalRestore = advancementClass.prototype.restore;
+    advancementClass.prototype.restore = async function(...args) {
+      if (this._id?.startsWith("advFeatPick")) {
+        inKnackFeatPickerRender = true;
+        try {
+          return await originalRestore.apply(this, args);
+        } finally {
+          inKnackFeatPickerRender = false;
+        }
+      }
+      return originalRestore.apply(this, args);
+    };
+  }
+  console.log(`[child-class] Prereq bypass installed on ${featModel.name} + ItemChoiceAdvancement (apply + restore).`);
 }
 
 export async function patchKnackPools() {
