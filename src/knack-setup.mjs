@@ -249,15 +249,18 @@ async function fixPlutoniumLockedFeats(packId = STUB_PACK) {
   ).join("");
   const confirmed = await foundry.applications.api.DialogV2.confirm({
     window: { title: "Fix Plutonium-locked ASI Advancements" },
+    position: { width: 560 },
     content: `
       <div>
         <p>Found <strong>${changes.length}</strong> ASI advancement(s) with the inverted-<code>locked</code> signature. Apply the fix?</p>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-          <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666);"><th style="text-align:left;">Feat</th><th style="text-align:left;">Was</th><th style="text-align:left;">Becomes</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div style="max-height: 360px; overflow-y: auto; border: 1px solid var(--color-border-highlight, #666); border-radius: 3px; padding: 4px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+            <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666); position: sticky; top: 0; background: var(--color-bg-app, #222);"><th style="text-align:left; padding: 2px 4px;">Feat</th><th style="text-align:left; padding: 2px 4px;">Was</th><th style="text-align:left; padding: 2px 4px;">Becomes</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
         <p style="font-size: 0.9em; color: var(--color-text-secondary, #888); margin-top: 8px;">
-          Each fix swaps <code>locked</code> to the complement of the current list. Re-running is idempotent — already-fixed items have all-six or no locked entries and are skipped.
+          Each fix swaps <code>locked</code> to the complement of the current list. Re-running is idempotent — already-fixed items are skipped.
         </p>
       </div>
     `
@@ -317,13 +320,16 @@ async function fixPlutoniumOverpointedASIs(packId = STUB_PACK) {
   ).join("");
   const confirmed = await foundry.applications.api.DialogV2.confirm({
     window: { title: "Fix Overpointed ASI Advancements" },
+    position: { width: 560 },
     content: `
       <div>
         <p>Found <strong>${changes.length}</strong> ASI advancement(s) where <code>fixed</code> already grants at least 1 point AND <code>points</code> is non-zero (Plutonium's double-grant signature). Zero out <code>points</code>?</p>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-          <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666);"><th style="text-align:left;">Feat</th><th style="text-align:left;">Was</th><th style="text-align:left;">Becomes</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div style="max-height: 360px; overflow-y: auto; border: 1px solid var(--color-border-highlight, #666); border-radius: 3px; padding: 4px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+            <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666); position: sticky; top: 0; background: var(--color-bg-app, #222);"><th style="text-align:left; padding: 2px 4px;">Feat</th><th style="text-align:left; padding: 2px 4px;">Was</th><th style="text-align:left; padding: 2px 4px;">Becomes</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
       </div>
     `
   });
