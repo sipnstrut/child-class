@@ -23,7 +23,7 @@
         "type": "ItemChoice",
         "level": 2,
         "title": "Knack Bonus Feat",
-        "hint": "Choose one: Skilled or Observant. The Prepare Knack Feats setup workflow (§ 7.2, step 5b) will populate the pool with the correct UUIDs; until then, drag in the feat from your own compendia.",
+        "hint": "Choose one: Skilled or Observant. The Prepare Knack Feats setup workflow populates the pool with the correct UUIDs from your enabled compendia; until that runs, drag in a feat manually.",
         "configuration": {
           "allowDrops": true,
           "choices": {

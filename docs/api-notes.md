@@ -849,30 +849,27 @@ condition attached)
   MIXED-mode wrap on `getLevelExp` that branches on the presence of the
   Child class item.
 
-### Unresolved items requiring live-Foundry verification
+### Live-Foundry verification — resolved during implementation
 
-- **Foundry v14 phased AE application (`"initial"` vs `"final"` phases).**
-  The Foundry v14 API docs confirm the phase parameter exists on
-  `applyActiveEffects(phase)`, and dnd5e 5.3.3 forwards the phase to the
-  Foundry base class without additional gating. However, this report
-  could not confirm from public sources exactly which phase runs at
-  which point in a v14 `prepareData` cycle (Foundry v13 has no phases;
-  v14 introduced them). The Q4 analysis assumes the default `"initial"`
-  phase runs between `prepareBaseData` and `prepareDerivedData` - which
-  matches v13 behaviour. **If v14 changes this timing, Q4's conclusion
-  about `prof` (base) vs `hp.max` (derived) reachability could shift.**
-  To verify: load dnd5e 5.3.3 in Foundry v14, put a `console.trace()` in
-  `Actor5e.prototype.applyActiveEffects` and observe when it fires
-  relative to `prepareBaseData` and `prepareDerivedData`.
-- **`hd.additional` formula resolution scope.** Q5 suggests
-  `hd.additional: "-@item.system.levels"` to zero out the hit-dice pool,
-  but the roll data lookup path (`getRollData` on class item context) was
-  not fully traced - it may resolve as `-@levels` instead. To verify: load
-  the module in Foundry, create a Child class item with `hd.additional`
-  set as above, and inspect `class.system.hd.max` post-prepare. If
-  non-zero, adjust the formula string.
-- **Exact `CONFIG.DND5E.CHARACTER_EXP_LEVELS` array contents.** The array
-  length (assumed 21) was inferred from `Math.min(level, levels.length - 1)`
-  usage but not directly read from source in this pass. To verify: `console.log(CONFIG.DND5E.CHARACTER_EXP_LEVELS.length)`
-  at the console. Non-blocking - the libWrapper implementation should
-  clamp defensively regardless.
+All three items originally flagged for live verification have been resolved
+against Foundry v14 / dnd5e 5.3.3 during the v0.1.0 – v0.2.x work.
+
+- **~~Foundry v14 phased AE application.~~** Moot. The AE-based approach to
+  HP / prof was abandoned entirely — see Q4 addendum below. dnd5e's
+  `ActiveEffect5e.apply` only evaluates formulas for keys in `FORMULA_FIELDS`
+  (`dnd5e.mjs:24528`), and neither `system.attributes.hp.max` nor
+  `system.attributes.prof` is in that set. The runtime pivot lives at
+  `src/hp.mjs`: a `libWrapper` WRAPPER on `Actor#prepareData` writes both
+  fields deterministically after the entire prepare cycle. The AE phase
+  question no longer matters for this module.
+- **~~`hd.additional` formula resolution scope.~~** Verified in Foundry.
+  The correct form is `-@item.levels` — dnd5e's `Item5e#getRollData`
+  populates `item` in the rollData as a spread of `this.system`, not the
+  item itself, so `@item.system.levels` and bare `@levels` both evaluate
+  to 0. `-@item.levels` produces `hd.max = 0` for a Child at any level.
+  See generate.mjs's inline comment on the class-item `hd` block.
+- **~~`CONFIG.DND5E.CHARACTER_EXP_LEVELS` array contents.~~** Moot. The
+  `getLevelExp` wrap in `src/xp.mjs` clamps defensively per
+  `Math.max(0, Math.min(level, table.length - 1))` on the Child table,
+  and delegates to the wrapped original for non-Child actors — so the
+  vanilla array's exact length never affects our path.

@@ -3,7 +3,7 @@
 **Target:** Foundry VTT v13/v14, D&D 5e system (`dnd5e`) v5.3.0+
 **Source material:** https://www.sipandstrut.com/childclass
 **Audience:** Claude Code (implementer)
-**Status:** **Rules-complete, API-verified against dnd5e 5.3.3.** Both editions are fully specified. Verification pass findings are recorded in `docs/api-notes.md`; three items remain flagged as requiring live-Foundry verification (v14 AE phase timing, `hd.additional` roll-data scope, and `CHARACTER_EXP_LEVELS` array length) — none are blocking for scaffolding.
+**Status:** **Implemented and shipped as v0.3.0** against Foundry v14 / dnd5e 5.3.3. Both editions and both ability rules are live. The verification pass in `docs/api-notes.md` is closed out — all three previously-flagged live-Foundry items were resolved during implementation. This document is the design source of truth; the shipped module may deviate in places where playtesting exposed a better approach, and those deviations are called out inline as "Correction YYYY-MM-DD" notes.
 
 ---
 
@@ -146,7 +146,7 @@ Set `system.source.rules` correctly on each class item so the dnd5e system's own
 
 My knowledge of `dnd5e` internals may be stale. **Before writing implementation code, verify the following against the installed system source and the wiki**, and record findings in `docs/api-notes.md`.
 
-> **Status:** verification pass complete against dnd5e 5.3.3. See `docs/api-notes.md` for findings, and `docs/design-amendments.md` (folded into this doc) for the design changes that resulted. Three items remain flagged for live-Foundry verification and are noted inline.
+> **Status:** verification pass complete against dnd5e 5.3.3 and closed. See `docs/api-notes.md` for findings; the three items originally deferred for live-Foundry verification were all resolved during implementation and are marked as such in the API notes.
 
 | Thing to verify | Where to look |
 |---|---|
@@ -756,7 +756,7 @@ What remains are implementation unknowns about `dnd5e` internals, marked **Verif
 
 **Build '14 + Unexceptional end to end first, then add the second edition and the second ability rule as pure data.** If adding Child '24 requires touching anything outside `src/variants/` and the compendium build, or adding Unremarkable requires touching anything outside `ABILITY_RULES`, the abstraction has failed and should be fixed before proceeding — that's the checkpoint this ordering exists to create.
 
-1. Verification pass (§ 3) → `docs/api-notes.md`. **Report back before proceeding.** *(Complete for dnd5e 5.3.3 as of 2026-08-18; three items flagged for live-Foundry re-verification.)*
+1. Verification pass (§ 3) → `docs/api-notes.md`. **Report back before proceeding.** *(Complete for dnd5e 5.3.3 as of 2026-08-18; all three previously-flagged live-Foundry items resolved during implementation.)*
 2. Module scaffolding, `module.json`, pack build pipeline, settings.
 3. Variant registry and `ABILITY_RULES` (§ 2.5.2), with `child14` and `unexceptional` defined and the others stubbed. Build-time generation of class items from variant definitions.
 4. HP override (§ 5.1) and proficiency override (§ 5.2) — the two riskiest system integrations. Prove these work before building anything on top of them.

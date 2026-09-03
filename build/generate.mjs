@@ -5,12 +5,11 @@
 //
 // Outputs:
 //   packs-src/child-class/    — 2 class items (child14, child24)
-//   packs-src/child-knacks/   — 13 '14 Knack items (child24 Knacks deferred to
-//                                step 12 per design § 13).
+//   packs-src/child-knacks/   — 26 Knack items (13 per edition)
 //   packs-src/child-features/ — Youth (§ 5.5), Trade Skill (§ 5.8), and the
-//                                two ability-rule feature items (§ 5.3).
-//                                Class-linked features granted via ItemGrant
-//                                on the class item at the appropriate level.
+//                                Graduate keepsake (§ 6.4). Class-linked
+//                                features granted via ItemGrant on the class
+//                                item at the appropriate level.
 //
 // HP (§ 5.1) and prof (§ 5.2) are applied at runtime via src/hp.mjs — dnd5e's
 // ActiveEffect handler only evaluates formulas for keys in FORMULA_FIELDS
@@ -59,8 +58,8 @@ const FEATURE_YOUTH_ID = padId("featYouth");
 const FEATURE_TRADE_ID = padId("featTradeSkill");
 const FEATURE_GRADUATE_ID = padId("featGraduate");
 
-// Map dnd5e '14 -> edition key used in knack ids. Kept trivial so step 12
-// (child24 Knacks) can extend without ambiguity.
+// Map variant id -> edition key used in knack ids. Kept trivial so a future
+// third edition can extend without ambiguity.
 function editionKeyFor(variant) {
   if (variant.id === "child14") return "14";
   if (variant.id === "child24") return "24";
@@ -70,10 +69,9 @@ function editionKeyFor(variant) {
 /* --------------------------------- Class item --------------------------------- */
 
 // § 5.4: level-2 ItemChoice pointing at the edition's Knack pool. Only wired
-// up for variants whose OWN knackTable is defined (not inherited) — child24
-// inherits child14's knackTable at load time, but the design ships edition-
-// specific Knack items ('14 and '24 tables differ), so we don't want child24's
-// class to reference '14 Knacks. child24's Knacks land in step 12.
+// up for variants whose OWN knackTable is defined (not inherited via the
+// `extends` merge in variants/index.mjs) — otherwise child24 would reference
+// child14's Knack UUIDs.
 function knackChoiceAdvancement(variant) {
   const editionKey = editionKeyFor(variant);
   const classKeys = Object.keys(variant.knackTable ?? {});
@@ -241,12 +239,11 @@ function weaponTrait(classKey) {
 }
 
 // Level-2 bonus feat — pool of the two class-specific feats named in the
-// knackTable. Feat UUIDs come from the § 7.2 setup workflow, not from the
-// module itself; until step 5b lands the pool is empty. `allowDrops: true`
-// so the level-2 step doesn't hard-block during smoke testing — the player
-// can drag in any feat to satisfy the ItemChoice. When 5b lands and the
-// resolver populates the pool, allowDrops flips off (or stays on as a GM
-// override, TBD).
+// knackTable. Feat UUIDs are resolved at runtime by the § 7.2 setup workflow
+// (src/feat-resolver.mjs) and injected into the compendium item's pool via
+// knack-pool.patchKnackPools. The authored pool ships empty with
+// `allowDrops: true` so a fresh install where the GM hasn't yet run
+// prepareKnackFeats can still complete the level-2 step by drag-drop.
 function featChoice(_variant, entry) {
   const [featA, featB] = entry ?? [{ name: "Feat A" }, { name: "Feat B" }];
   return {
@@ -254,7 +251,7 @@ function featChoice(_variant, entry) {
     type: "ItemChoice",
     level: 2,
     title: "Knack Bonus Feat",
-    hint: `Choose one: ${featA.name} or ${featB.name}. The Prepare Knack Feats setup workflow (§ 7.2, step 5b) will populate the pool with the correct UUIDs; until then, drag in the feat from your own compendia.`,
+    hint: `Choose one: ${featA.name} or ${featB.name}. The Prepare Knack Feats setup workflow populates the pool with the correct UUIDs from your enabled compendia; until that runs, drag in a feat manually.`,
     configuration: {
       allowDrops: true,
       choices: { "2": { count: 1, replacement: false } },
@@ -429,7 +426,7 @@ function graduateFeature() {
 
 // RAW variants (pre-`extends` resolution) — used to distinguish "owns its own
 // knackTable" (child14) from "inherits knackTable" (child24). Only owners get
-// generated Knacks in this pass; inherited variants defer to their step 12.
+// generated Knacks in this pass; inherited variants inherit UUIDs from base.
 async function loadRawVariants() {
   const rawByModule = await Promise.all(
     Object.keys(CHILD_VARIANTS).map(async id => {
@@ -482,8 +479,7 @@ for (const [id, variant] of Object.entries(CHILD_VARIANTS)) {
   }
 }
 
-// Features — Youth + Trade Skill (edition-agnostic; ability-rule feature
-// items land in step 11's Unremarkable wiring).
+// Features — Youth, Trade Skill, Graduate (all edition-agnostic).
 mkdirSync(FEATURES_DIR, { recursive: true });
 cleanDir(FEATURES_DIR);
 

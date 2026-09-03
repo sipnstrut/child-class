@@ -4,6 +4,26 @@ All notable changes to the Child Class Foundry VTT module. Dates use ISO-8601.
 Version numbers follow semver relative to a hypothetical `1.0.0`; expect
 `0.x` versions to shift shape as the module iterates toward a stable API.
 
+## v0.3.1 — 2026-09-02
+
+Audit follow-up pass (Phase 6 documentation) — corrections only, no behavior
+changes.
+
+### Fixed
+
+- `build/generate.mjs` header comment updated to reflect current output
+  (26 Knack items, 3 features including Graduate); stale "step 12" /
+  "step 11" / "step 5b" references removed.
+- Feat picker hint text on shipped Knack items no longer refers to
+  "step 5b" — reads plainly about the resolver + drag-drop fallback.
+- `docs/api-notes.md` — the three items in "Unresolved items requiring
+  live-Foundry verification" rewritten with per-item resolutions
+  (AE approach abandoned, `-@item.levels` confirmed, XP wrap clamps
+  defensively).
+- `docs/design.md` status header updated from "Rules-complete" to
+  "Implemented and shipped as v0.3.0"; § 3 verification note and § 13
+  step-1 tracker note aligned with reality.
+
 ## v0.3.0 — 2026-09-02
 
 Big audit-follow-up release. Behavior changes are all opt-in via new
