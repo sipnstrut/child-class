@@ -21,10 +21,21 @@ export function registerKnackSetup() {
   if (module) {
     module.api ??= {};
     module.api.prepareKnackFeats = openDialog;
-    module.api.createStubFeats = createStubFeats;
     module.api.fixPlutoniumLockedFeats = fixPlutoniumLockedFeats;
     module.api.fixPlutoniumOverpointedASIs = fixPlutoniumOverpointedASIs;
+    module.api.fixPlutoniumFeats = fixPlutoniumFeats;
+    // createStubFeats intentionally not exposed — stubs are dev-testing
+    // noise; production installs use Plutonium's Advancement-Backing
+    // Compendium or a hand-authored world compendium as the feat source.
   }
+  game.settings.registerMenu(MODULE_ID, "fixPlutoniumFeats", {
+    name: "Fix Plutonium Feats",
+    label: "Fix Plutonium Feats",
+    hint: "Scan imported feats in the stub compendium for Plutonium's data quirks — inverted `locked` and overpointed ASIs — and repair them with a preview dialog. Safe to re-run; already-fixed feats are skipped.",
+    icon: "fas fa-wrench",
+    type: PlutoniumFixerMenuButton,
+    restricted: true
+  });
   // On first load in a world where the map has never been populated, nudge
   // the GM once. Skip on subsequent loads regardless of resolution status —
   // GMs will re-run the dialog explicitly when they import more feats.
@@ -60,10 +71,15 @@ async function openDialog() {
     content,
     buttons: [
       { action: "rescan", label: "Rescan", default: true },
+      { action: "fixFeats", label: "Fix Plutonium Feats" },
       { action: "close",  label: "Close" }
     ]
   });
   if (result === "rescan") return openDialog();
+  if (result === "fixFeats") {
+    await fixPlutoniumFeats();
+    return openDialog();
+  }
 }
 
 function summarize(map) {
@@ -129,6 +145,19 @@ function escape(s) {
   return String(s ?? "").replace(/[&<>"']/g, ch => (
     { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
   ));
+}
+
+// Settings menu buttons in Foundry are registered as a class type that gets
+// instantiated + rendered on click. We don't want a full ApplicationV2 window
+// for a click-and-run button — override `render` to fire the fixer directly
+// and never actually mount UI. The class returns itself synchronously so
+// Foundry's menu-click plumbing doesn't error, but the render is effectively
+// a no-op that delegates to the fixer's own dialogs.
+class PlutoniumFixerMenuButton extends foundry.applications.api.ApplicationV2 {
+  async render() {
+    await fixPlutoniumFeats();
+    return this;
+  }
 }
 
 // Smoke-testing helper. Creates a world compendium and populates it with
@@ -203,39 +232,56 @@ function collectFeatNames() {
 // the stub compendium where `locked` has 1-3 entries (Plutonium's signature —
 // hand-authored ASIs usually have `locked: []`). Safe to re-run; already-
 // inverted ASIs won't match the 1-3 signature anymore.
-const STUB_PACK = `world.${STUB_PACK_NAME}`;
 const ALL_ABILITIES = ["str", "dex", "con", "int", "wis", "cha"];
 
-async function fixPlutoniumLockedFeats(packId = STUB_PACK) {
+// Return every writable, world-scoped Item compendium — that's where a
+// Plutonium install lands imported feats, whether via the Advancement-Backing
+// Compendium or a hand-created world pack. System-scoped packs are locked
+// and skipped so we never try to mutate SRD content.
+async function writableWorldItemPacks() {
+  const packs = [];
+  for (const pack of game.packs) {
+    if (pack.metadata.type !== "Item") continue;
+    if (pack.metadata.packageType !== "world") continue;
+    if (pack.locked) continue;
+    packs.push(pack);
+  }
+  return packs;
+}
+
+async function fixPlutoniumLockedFeats() {
   if (!game.user.isGM) {
     ui.notifications?.warn("Only GMs can fix imported feats.");
     return;
   }
-  const pack = game.packs.get(packId);
-  if (!pack) {
-    ui.notifications?.warn(`Pack "${packId}" not found.`);
+  const packs = await writableWorldItemPacks();
+  if (!packs.length) {
+    ui.notifications?.warn("No writable world-scoped Item compendia to scan.");
     return;
   }
-  const docs = await pack.getDocuments();
 
   const changes = [];
-  for (const doc of docs) {
-    if (doc.type !== "feat") continue;
-    const advancement = doc._source?.system?.advancement;
-    if (!advancement) continue;
-    for (const [advId, adv] of Object.entries(advancement)) {
-      if (adv.type !== "AbilityScoreImprovement") continue;
-      const locked = adv.configuration?.locked;
-      if (!Array.isArray(locked)) continue;
-      if (locked.length < 1 || locked.length > 3) continue;
-      const inverted = ALL_ABILITIES.filter(a => !locked.includes(a));
-      changes.push({
-        doc,
-        advId,
-        name: doc.name,
-        was: [...locked],
-        becomes: inverted
-      });
+  for (const pack of packs) {
+    const docs = await pack.getDocuments();
+    for (const doc of docs) {
+      if (doc.type !== "feat") continue;
+      const advancement = doc._source?.system?.advancement;
+      if (!advancement) continue;
+      for (const [advId, adv] of Object.entries(advancement)) {
+        if (adv.type !== "AbilityScoreImprovement") continue;
+        const locked = adv.configuration?.locked;
+        if (!Array.isArray(locked)) continue;
+        if (locked.length < 1 || locked.length > 3) continue;
+        const inverted = ALL_ABILITIES.filter(a => !locked.includes(a));
+        changes.push({
+          doc,
+          advId,
+          name: doc.name,
+          packLabel: pack.metadata.label,
+          was: [...locked],
+          becomes: inverted
+        });
+      }
     }
   }
 
@@ -276,36 +322,46 @@ async function fixPlutoniumLockedFeats(packId = STUB_PACK) {
   console.log(`[child-class] Fixed ${changes.length} Plutonium-locked ASI feats.`);
 }
 
+// Combined helper — runs both ASI fixers in sequence. Wired into the
+// Prepare Knack Feats dialog and exposed via the settings menu button so
+// GMs have a single "Fix Plutonium Feats" affordance.
+async function fixPlutoniumFeats() {
+  await fixPlutoniumLockedFeats();
+  await fixPlutoniumOverpointedASIs();
+}
+
 // Companion to the locked-inversion fix: Plutonium's imports sometimes set
 // BOTH `fixed` (auto-grant) AND `points` (spend more) on the same ASI, so
 // Durable ends up as "+1 CON auto plus one more anywhere" instead of the
 // RAW "+1 CON only." This helper zeroes `points` on any ASI where `fixed`
 // already grants ≥ 1 point. Signature makes it safe to co-exist with the
 // locked-inversion pass — different fields, different heuristic.
-async function fixPlutoniumOverpointedASIs(packId = STUB_PACK) {
+async function fixPlutoniumOverpointedASIs() {
   if (!game.user.isGM) {
     ui.notifications?.warn("Only GMs can fix imported feats.");
     return;
   }
-  const pack = game.packs.get(packId);
-  if (!pack) {
-    ui.notifications?.warn(`Pack "${packId}" not found.`);
+  const packs = await writableWorldItemPacks();
+  if (!packs.length) {
+    ui.notifications?.warn("No writable world-scoped Item compendia to scan.");
     return;
   }
-  const docs = await pack.getDocuments();
 
   const changes = [];
-  for (const doc of docs) {
-    if (doc.type !== "feat") continue;
-    const advancement = doc._source?.system?.advancement;
-    if (!advancement) continue;
-    for (const [advId, adv] of Object.entries(advancement)) {
-      if (adv.type !== "AbilityScoreImprovement") continue;
-      const points = adv.configuration?.points ?? 0;
-      const fixed = adv.configuration?.fixed ?? {};
-      const fixedTotal = ALL_ABILITIES.reduce((sum, a) => sum + (fixed[a] ?? 0), 0);
-      if (points > 0 && fixedTotal >= 1) {
-        changes.push({ doc, advId, name: doc.name, wasPoints: points, fixedTotal });
+  for (const pack of packs) {
+    const docs = await pack.getDocuments();
+    for (const doc of docs) {
+      if (doc.type !== "feat") continue;
+      const advancement = doc._source?.system?.advancement;
+      if (!advancement) continue;
+      for (const [advId, adv] of Object.entries(advancement)) {
+        if (adv.type !== "AbilityScoreImprovement") continue;
+        const points = adv.configuration?.points ?? 0;
+        const fixed = adv.configuration?.fixed ?? {};
+        const fixedTotal = ALL_ABILITIES.reduce((sum, a) => sum + (fixed[a] ?? 0), 0);
+        if (points > 0 && fixedTotal >= 1) {
+          changes.push({ doc, advId, name: doc.name, packLabel: pack.metadata.label, wasPoints: points, fixedTotal });
+        }
       }
     }
   }

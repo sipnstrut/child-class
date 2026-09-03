@@ -33,84 +33,65 @@ does not have the right to redistribute. You bring them.
 The setup runs once at world start. Every step is idempotent, so re-running
 any of them after importing more feats is safe.
 
-### 1. Configure Plutonium
+### 1. Configure Plutonium's import target
 
 Turn on **Plutonium → Module Settings → Importing → Use Advancement-Backing
-Compendium** (may also be labelled *Hidden Importer for Feats* in some
-versions). This tells Plutonium to mirror any feats you import into a Foundry
-compendium the resolver can see. Without it, Plutonium's content lives inside
-the Plutonium module itself and can't be scanned.
+Compendium**. This mirrors any feats you import into a Foundry-scannable
+compendium. Without it, Plutonium's content lives inside the Plutonium
+module itself and can't be found by our resolver.
 
-### 2. Create the stub compendium
+Optionally, create a dedicated world compendium (right-click **Compendium
+Packs** sidebar → **Create Compendium** → **Item** type, name it e.g.
+`Feats`) and point Plutonium's Item / Feat import target at it. Not
+required — the Advancement-Backing Compendium works just as well.
 
-Open F12 (developer console). Run:
+### 2. Import the Knack feats via Plutonium
 
-```js
-await game.modules.get("child-class").api.createStubFeats()
-```
+Open Plutonium's feat browser / importer. Import the 26 feats listed in
+[docs/design.md § 5.4](docs/design.md#54-the-knack-level-2) (or the subset
+your table plans to allow). They land in whichever compendium you targeted
+in step 1.
 
-This creates a **Child Class Stub Feats** world compendium and populates it
-with an empty placeholder for every feat the Knack tables reference (26
-names). If you don't import any real feats over the top, these stubs still
-satisfy the level-up flow — the character just gets a mechanically-empty feat
-item they can inspect and read the description of.
-
-If you'd rather skip stubs entirely and only use real Plutonium imports, this
-step is optional. In that case, wherever Plutonium imports land is where the
-resolver will find your feats.
-
-### 3. Import the real feats via Plutonium
-
-Open Plutonium's Feat Importer (usually under the **Add-ons → Plutonium**
-sidebar or a right-click menu on the actor sheet). Point its import target at
-your Advancement-Backing Compendium (or another writable world compendium
-you've created). Import at least the 26 feat names listed in
-[docs/design.md § 5.4](docs/design.md#54-the-knack-level-2), or as many as you
-plan to allow at your table.
-
-Plutonium's importer has one class of bug the module compensates for:
-some Ability Score Improvement advancements are written in a way `dnd5e`
-reads inverted. Step 5 handles it.
-
-### 4. Resolve the Knack feat pools
+### 3. Resolve the Knack feat pools
 
 ```js
 await game.modules.get("child-class").api.prepareKnackFeats()
 ```
 
-A dialog opens showing every Knack feat and where it resolved to
-(pack + edition). Anything marked `missing` isn't in a scan-able compendium
-yet — import it and rerun **Rescan** in the dialog.
+A dialog opens showing every Knack feat and where it resolved to (pack +
+edition). Anything marked `missing` isn't in a scan-able compendium yet —
+import it via Plutonium and hit **Rescan**.
 
 The scan writes a UUID map to the `knackFeatMap` world setting and patches
-each Knack item's bonus-feat pool in memory. Once resolved, Knack Bonus Feat
-pickers at level 2 will show the correct 2 options for each aspiring class.
+each Knack item's bonus-feat pool in memory. Level-2 Knack Bonus Feat
+pickers now show the correct 2 options per aspiring class.
 
-### 5. Fix Plutonium's ASI configuration quirks
+### 4. Fix Plutonium's ASI configuration quirks
 
-Same dialog, or via **Game Settings → Configure Settings → Module Settings →
-Child Class → Fix Plutonium Feats** (or the console command):
+Same dialog's **Fix Plutonium Feats** button, or **Game Settings → Configure
+Settings → Module Settings → Child Class → Fix Plutonium Feats**, or:
 
 ```js
 await game.modules.get("child-class").api.fixPlutoniumFeats()
 ```
 
-This runs two preview dialogs. Each lists exactly which imported feat items
-will change and how:
+Two preview dialogs list which imported feats will change and how. Both
+fixers scan every writable world-scoped Item compendium — you don't have to
+tell them where your imports live.
 
 - **`fixPlutoniumLockedFeats`** — `Ability Score Improvement` advancements
-  where the `locked` field is written with Plutonium's semantic ("these are
-  the abilities the feat commits to") rather than dnd5e's ("these abilities
-  are excluded from selection"). Piercer, Mounted Combatant, and any
-  "+1 to STR or DEX" feat is affected.
+  where `locked` is written with Plutonium's semantic ("these are the
+  abilities the feat commits to") rather than dnd5e's ("these abilities are
+  excluded from selection"). Piercer, Mounted Combatant, and any "+1 to STR
+  or DEX" feat is affected.
 - **`fixPlutoniumOverpointedASIs`** — advancements where `fixed` already
   grants ≥ 1 point AND `points` is non-zero, producing a "+1 CON auto plus
   one more anywhere" result. Durable is affected.
 
-Both fixers are idempotent — if a feat has already been corrected (or was
-never wrong), it's skipped.
+Both fixers are idempotent — feats already corrected (or never wrong) are
+skipped.
 
-### 6. You're done
+### 5. You're done
 
 Drop **Child '14** or **Child '24** from the *Child Class* compendium onto an
 actor. The ability roll dialog fires automatically; assign values from the
@@ -147,9 +128,8 @@ All commands under `game.modules.get("child-class").api`:
 
 | Command | What it does |
 |---|---|
-| `prepareKnackFeats()` | Resolve Knack feats + patch pools. Setup step 4. |
-| `createStubFeats()` | Create the stub compendium with 26 placeholder feats. Setup step 2. |
-| `fixPlutoniumFeats()` | Run both ASI fixers in sequence. Setup step 5. |
+| `prepareKnackFeats()` | Resolve Knack feats + patch pools. Setup step 3. |
+| `fixPlutoniumFeats()` | Run both ASI fixers in sequence. Setup step 4. |
 | `fixPlutoniumLockedFeats()` | Run just the locked-inversion fixer. |
 | `fixPlutoniumOverpointedASIs()` | Run just the overpointed-ASI fixer. |
 | `rollChildAbilities(actor?)` | Manually re-open the ability roll dialog. |
