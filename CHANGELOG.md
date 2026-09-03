@@ -4,6 +4,20 @@ All notable changes to the Child Class Foundry VTT module. Dates use ISO-8601.
 Version numbers follow semver relative to a hypothetical `1.0.0`; expect
 `0.x` versions to shift shape as the module iterates toward a stable API.
 
+## v0.3.3 — 2026-09-03
+
+### Removed
+
+- **`XP progression` (compressed vs raw-aligned) setting.** Compressed
+  wasn't providing meaningful value. `src/xp.mjs` now always reads
+  `variant.xpTable`, defaulting to `[0, 30, 75, 135, 210, 300]` if a
+  variant hasn't specified one. Lang keys dropped.
+- **`Full HP on graduation` setting.** Redundant — graduation strips the
+  Child class entirely, and a classless character has `hp.max = 0` until
+  the next class is dropped, at which point the new class computes its
+  own baseline. No behavior needed here. The graduation flow no longer
+  touches `hp.value`.
+
 ## v0.3.2 — 2026-09-03
 
 ### Added

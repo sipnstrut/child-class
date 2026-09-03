@@ -230,13 +230,6 @@ async function executeGraduation(actor, variant) {
       updates["system.details.xp.value"] = 0;
     }
 
-    // Heal-on-graduation: null out `hp.value` so `prepareHitPoints` resets
-    // to max on the next prepare (once the new class lands and computes
-    // its own HP baseline).
-    if (game.settings.get(MODULE_ID, "healOnGraduation")) {
-      updates["system.attributes.hp.value"] = null;
-    }
-
     await actor.update(updates);
 
     await broadcastGraduationCard(actor, variant, { knack: knackKey, bonusFeat: bonusFeatName, childLevel });

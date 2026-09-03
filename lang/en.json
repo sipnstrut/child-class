@@ -10,19 +10,11 @@
   "CHILDCLASS.Settings.AbilityRule.Unexceptional": "Unexceptional (6+1d6)",
   "CHILDCLASS.Settings.AbilityRule.Unremarkable": "Unremarkable (7+1d4)",
 
-  "CHILDCLASS.Settings.XpScale.Name": "XP progression",
-  "CHILDCLASS.Settings.XpScale.Hint": "How much XP the Child's five levels cost total. Raw-aligned (300) lands a Knack-matched graduate at exactly the RAW level-2 threshold with no reconciliation; compressed (100) is rounder but requires the DM to scale monster XP awards down by ~3x.",
-  "CHILDCLASS.Settings.XpScale.RawAligned": "Raw-aligned (0/30/75/135/210/300)",
-  "CHILDCLASS.Settings.XpScale.Compressed": "Compressed (0/10/25/45/70/100)",
-
   "CHILDCLASS.Settings.XpOnGraduation.Name": "XP handling at graduation",
   "CHILDCLASS.Settings.XpOnGraduation.Hint": "Default XP mode offered in the graduation dialog. Reset uses the RAW minimum for the new character level; carry keeps the Child's total; milestone zeroes it.",
   "CHILDCLASS.Settings.XpOnGraduation.Reset": "Reset to RAW minimum",
   "CHILDCLASS.Settings.XpOnGraduation.Carry": "Carry Child total",
   "CHILDCLASS.Settings.XpOnGraduation.Milestone": "Milestone (no XP)",
-
-  "CHILDCLASS.Settings.HealOnGraduation.Name": "Full HP on graduation",
-  "CHILDCLASS.Settings.HealOnGraduation.Hint": "Set current HP to the new max after graduating. Off preserves damage taken as a Child.",
 
   "CHILDCLASS.Settings.EnforceMulticlassBlock.Name": "Enforce multiclass block",
   "CHILDCLASS.Settings.EnforceMulticlassBlock.Hint": "Block a Child from taking a second class and prevent non-Children from taking a Child level. Turn off only if your table means to break the rules.",

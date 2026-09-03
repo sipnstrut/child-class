@@ -30,17 +30,6 @@ const SETTING_DESCRIPTORS = [
     default: {}
   }],
 
-  ["xpScale", {
-    name: "CHILDCLASS.Settings.XpScale.Name",
-    hint: "CHILDCLASS.Settings.XpScale.Hint",
-    type: String,
-    choices: {
-      "raw-aligned": "CHILDCLASS.Settings.XpScale.RawAligned",
-      compressed: "CHILDCLASS.Settings.XpScale.Compressed"
-    },
-    default: "raw-aligned"
-  }],
-
   ["xpOnGraduation", {
     name: "CHILDCLASS.Settings.XpOnGraduation.Name",
     hint: "CHILDCLASS.Settings.XpOnGraduation.Hint",
@@ -51,13 +40,6 @@ const SETTING_DESCRIPTORS = [
       milestone: "CHILDCLASS.Settings.XpOnGraduation.Milestone"
     },
     default: "reset"
-  }],
-
-  ["healOnGraduation", {
-    name: "CHILDCLASS.Settings.HealOnGraduation.Name",
-    hint: "CHILDCLASS.Settings.HealOnGraduation.Hint",
-    type: Boolean,
-    default: true
   }],
 
   ["enforceMulticlassBlock", {
