@@ -16,8 +16,7 @@
 import { MODULE_ID } from "./config.mjs";
 import { CHILD_VARIANTS } from "./variants/index.mjs";
 import { KNACK_CLASSES } from "./variants/knack-classes.mjs";
-
-const KNACK_ID_RE = /^k(14|24)([a-z]+)0*$/;
+import { KNACK_ID_RE, escape, resolveTargetActor } from "./utils.mjs";
 
 export function registerTradeSkill() {
   const module = game.modules.get(MODULE_ID);
@@ -30,6 +29,7 @@ export function registerTradeSkill() {
 
 function detectLevel5(item, changes, options, userId) {
   if (userId !== game.user.id) return;
+  if (!game.settings.get(MODULE_ID, "autoFireDialogs")) return;
   if (item.type !== "class") return;
   if (!(item.system?.identifier in CHILD_VARIANTS)) return;
   const newLevel = foundry.utils.getProperty(changes, "system.levels");
@@ -91,6 +91,43 @@ export async function rollTradeSkillGold(actor) {
     content: `<div><h3>Trade Skill</h3><p>${escape(knack.label)} Knack: ${escape(formula)} = <strong>${roll.total} gp</strong>.</p></div>`,
     rolls: [roll]
   });
+
+  // (d) One item the character is proficient with — design § 5.8 says "a
+  // prompt with a compendium browser filtered to items the character is
+  // proficient with. If filtering proves impractical, fall back to an
+  // unfiltered browser with a warning line." Filtering by actor's live
+  // trait arrays across every enabled compendium isn't practical here, so
+  // we open dnd5e's compendium browser at the Equipment tab and note the
+  // caveat in a chat card. Player picks and drags to the sheet as normal.
+  await promptForProficientItem(actor, knack);
+}
+
+async function promptForProficientItem(actor, knack) {
+  const proceed = await foundry.applications.api.DialogV2.confirm({
+    window: { title: "Trade Skill — Gear" },
+    content: `
+      <div>
+        <p><strong>${escape(actor.name)}</strong> also gains <em>one item they are proficient with</em>. Open the equipment browser?</p>
+        <p style="font-size: 0.9em; color: var(--color-text-secondary, #888);">
+          The browser opens unfiltered — pick anything your character is proficient with per the ${escape(knack.label)} class list, drag it onto the sheet, and the GM confirms.
+        </p>
+      </div>
+    `
+  });
+  if (!proceed) return;
+  try {
+    const browser = dnd5e?.applications?.CompendiumBrowser;
+    if (browser?.select) {
+      await browser.select({ filters: { locked: { types: new Set(["equipment", "weapon", "consumable", "loot"]) } } });
+    } else if (browser) {
+      new browser({ tab: "items" }).render(true);
+    } else {
+      ui.notifications?.info("Open Compendium Packs → dnd5e Items to pick a proficient item, drag to sheet.");
+    }
+  } catch (err) {
+    console.error("[child-class] Trade Skill item browser failed:", err);
+    ui.notifications?.info("Open the Compendium Packs sidebar and drag a proficient item onto the sheet.");
+  }
 }
 
 // Locate the Knack class key from an actor's items. Falls back to the actor's
@@ -98,12 +135,8 @@ export async function rollTradeSkillGold(actor) {
 // snapshotting lands: write the flag at Knack grant time so this doesn't need
 // the item scan (§ 5.4 already calls for the flag write).
 function findKnackClass(actor) {
-  const suspects = [];
   for (const item of actor.items) {
-    const sourceId = item._source?._id;
-    const liveId = item.id;
-    const m = sourceId?.match(KNACK_ID_RE) ?? liveId?.match(KNACK_ID_RE);
-    suspects.push({ name: item.name, type: item.type, sourceId, liveId, matched: !!m });
+    const m = item._source?._id?.match(KNACK_ID_RE) ?? item.id?.match(KNACK_ID_RE);
     if (m) return m[2];
   }
   // Fallback: parse the class from the item name if _id was reassigned.
@@ -112,19 +145,6 @@ function findKnackClass(actor) {
     const classPart = item.name.replace(/^Knack '\d+:\s*/i, "").toLowerCase().trim();
     if (KNACK_CLASSES[classPart]) return classPart;
   }
-  console.log("[child-class] no Knack found on actor. Items:", suspects);
-  const flagged = actor.getFlag(MODULE_ID, "knack");
-  return flagged ?? null;
+  return actor.getFlag(MODULE_ID, "knack") ?? null;
 }
 
-function resolveTargetActor() {
-  const controlled = canvas?.tokens?.controlled?.[0];
-  if (controlled?.actor) return controlled.actor;
-  return game.user.character ?? null;
-}
-
-function escape(s) {
-  return String(s ?? "").replace(/[&<>"']/g, ch => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
-  ));
-}

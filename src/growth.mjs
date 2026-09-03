@@ -14,12 +14,8 @@
 import { MODULE_ID } from "./config.mjs";
 import { ABILITY_RULES } from "./ability-rules.mjs";
 import { CHILD_VARIANTS } from "./variants/index.mjs";
+import { ABILITIES, ABILITY_LABELS, escape, resolveTargetActor } from "./utils.mjs";
 
-const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"];
-const ABILITY_LABELS = {
-  str: "Strength", dex: "Dexterity", con: "Constitution",
-  int: "Intelligence", wis: "Wisdom", cha: "Charisma"
-};
 const CHOICE_COUNT = 2;
 
 export function registerGrowth() {
@@ -32,6 +28,7 @@ export function registerGrowth() {
 }
 
 function detectLevel4(item, changes) {
+  if (!game.settings.get(MODULE_ID, "autoFireDialogs")) return;
   if (item.type !== "class") return;
   if (!(item.system?.identifier in CHILD_VARIANTS)) return;
   const newLevel = foundry.utils.getProperty(changes, "system.levels");
@@ -180,14 +177,3 @@ function displayLabel(rule) {
   return rule.label ?? (rule.id.charAt(0).toUpperCase() + rule.id.slice(1));
 }
 
-function resolveTargetActor() {
-  const controlled = canvas?.tokens?.controlled?.[0];
-  if (controlled?.actor) return controlled.actor;
-  return game.user.character ?? null;
-}
-
-function escape(s) {
-  return String(s ?? "").replace(/[&<>"']/g, ch => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
-  ));
-}

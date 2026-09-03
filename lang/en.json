@@ -31,5 +31,11 @@
   "CHILDCLASS.Settings.SnapshotRetentionDays.Hint": "How many days the pre-graduation snapshot is kept before the Undo option disappears. 0 = never auto-clear.",
 
   "CHILDCLASS.Settings.AllowMixedEditions.Name": "Allow mixed editions in one world",
-  "CHILDCLASS.Settings.AllowMixedEditions.Hint": "Whether one world may contain both '14 and '24 Children. Off enforces a single edition per world. A single actor may never hold both editions regardless of this setting."
+  "CHILDCLASS.Settings.AllowMixedEditions.Hint": "Whether one world may contain both '14 and '24 Children. Off enforces a single edition per world. A single actor may never hold both editions regardless of this setting.",
+
+  "CHILDCLASS.Settings.AutoFireDialogs.Name": "Auto-open Child dialogs",
+  "CHILDCLASS.Settings.AutoFireDialogs.Hint": "When on, the ability roll dialog opens automatically as soon as a Child class is dropped on a fresh actor, Growth opens on level 4, and Trade Skill fires on level 5. Off leaves the flows manual — the GM invokes them from the API when ready.",
+
+  "CHILDCLASS.Settings.VerboseLogging.Name": "Verbose console logging",
+  "CHILDCLASS.Settings.VerboseLogging.Hint": "Emit per-render diagnostic messages to the F12 console. Useful when debugging a stuck Knack picker or a prereq bypass that isn't taking. Off in normal play."
 }

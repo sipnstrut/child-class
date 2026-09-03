@@ -1,20 +1,17 @@
-// § 7.2 setup workflow. GM-facing dialog that scans enabled compendia + world
-// items for every feat named in the Child Knack tables, caches the resolved
-// UUIDs in the `knackFeatMap` world setting, and surfaces missing / ambiguous
-// results so the GM can fix them (usually by importing the feat via Plutonium
-// with `Use Advancement-Backing Compendium` on, or by hand into a world
-// compendium named e.g. `Knack Feats '14`).
+// § 7.2 setup workflow. GM-facing dialog that scans every enabled Item
+// compendium + world items for the feats named in the Child Knack tables,
+// caches resolved UUIDs in the `knackFeatMap` world setting, and surfaces
+// anything missing so the GM can add it. The resolver is compendium-source-
+// agnostic — the SRD-shipped feats, hand-authored world compendium items,
+// and Plutonium's Advancement-Backing Compendium all work equally.
 //
 // Exposed via `game.modules.get("child-class").api.prepareKnackFeats()` and
-// registered as a settings menu button so it appears under Configure Settings.
+// registered as a settings menu button under Configure Settings.
 
 import { MODULE_ID } from "./config.mjs";
 import { buildKnackFeatMap } from "./feat-resolver.mjs";
 import { patchKnackPools } from "./knack-pool.mjs";
-import { CHILD_VARIANTS } from "./variants/index.mjs";
-
-const STUB_PACK_NAME = "child-class-stub-feats";
-const STUB_PACK_LABEL = "Child Class Stub Feats";
+import { escape } from "./utils.mjs";
 
 export function registerKnackSetup() {
   const module = game.modules.get(MODULE_ID);
@@ -24,14 +21,11 @@ export function registerKnackSetup() {
     module.api.fixPlutoniumLockedFeats = fixPlutoniumLockedFeats;
     module.api.fixPlutoniumOverpointedASIs = fixPlutoniumOverpointedASIs;
     module.api.fixPlutoniumFeats = fixPlutoniumFeats;
-    // createStubFeats intentionally not exposed — stubs are dev-testing
-    // noise; production installs use Plutonium's Advancement-Backing
-    // Compendium or a hand-authored world compendium as the feat source.
   }
   game.settings.registerMenu(MODULE_ID, "fixPlutoniumFeats", {
     name: "Fix Plutonium Feats",
     label: "Fix Plutonium Feats",
-    hint: "Scan imported feats in the stub compendium for Plutonium's data quirks — inverted `locked` and overpointed ASIs — and repair them with a preview dialog. Safe to re-run; already-fixed feats are skipped.",
+    hint: "Scan every writable world Item compendium for Plutonium's ASI data quirks — inverted `locked` and overpointed advancements — and repair them with a preview. Safe to re-run; already-fixed feats are skipped.",
     icon: "fas fa-wrench",
     type: PlutoniumFixerMenuButton,
     restricted: true
@@ -141,11 +135,6 @@ function statusCell(feat) {
   return `<span style="color: var(--color-text-secondary);">${label}</span>${ambiguous}`;
 }
 
-function escape(s) {
-  return String(s ?? "").replace(/[&<>"']/g, ch => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
-  ));
-}
 
 // Settings menu buttons in Foundry are registered as a class type that gets
 // instantiated + rendered on click. We don't want a full ApplicationV2 window
@@ -160,78 +149,14 @@ class PlutoniumFixerMenuButton extends foundry.applications.api.ApplicationV2 {
   }
 }
 
-// Smoke-testing helper. Creates a world compendium and populates it with
-// empty feat items named exactly after each Knack feat, so the resolver has
-// something to bind to before the GM has imported real feats. Idempotent —
-// safe to re-run. Not intended for shipped play; a warning surfaces on each
-// stub item's description so nobody mistakes it for real content.
-async function createStubFeats() {
-  if (!game.user.isGM) {
-    ui.notifications?.warn("Only GMs can create the stub feats compendium.");
-    return;
-  }
-  const packId = `world.${STUB_PACK_NAME}`;
-  let pack = game.packs.get(packId);
-  if (!pack) {
-    pack = await CompendiumCollection.createCompendium({
-      name: STUB_PACK_NAME,
-      label: STUB_PACK_LABEL,
-      type: "Item"
-    });
-  }
-
-  const needed = collectFeatNames();
-  const existing = new Set(
-    (await pack.getIndex({ fields: ["name"] })).map(e => e.name.trim().toLowerCase())
-  );
-
-  const toCreate = [];
-  for (const name of needed) {
-    if (existing.has(name.trim().toLowerCase())) continue;
-    toCreate.push({
-      name,
-      type: "feat",
-      img: "icons/skills/trades/academics-study-reading-book.webp",
-      system: {
-        type: { value: "", subtype: "" },
-        description: {
-          value: `<p><strong>Stub</strong> — placeholder created by the Child Class module for smoke testing. Replace with a real Plutonium import (or edit in place) when ready. This item carries no mechanical content.</p>`,
-          chat: ""
-        }
-      }
-    });
-  }
-
-  if (toCreate.length) {
-    await Item.createDocuments(toCreate, { pack: packId, keepId: false });
-  }
-
-  ui.notifications?.info(
-    `Child Class: ${toCreate.length} stub feats created, ${existing.size} already present. Total in pack: ${existing.size + toCreate.length}. Now run prepareKnackFeats() to resolve them.`
-  );
-  console.log(
-    `[child-class] Created ${toCreate.length} stub feats in compendium "${STUB_PACK_LABEL}" (${packId}).`
-  );
-}
-
-function collectFeatNames() {
-  const names = new Set();
-  for (const variant of Object.values(CHILD_VARIANTS)) {
-    for (const feats of Object.values(variant.knackTable ?? {})) {
-      for (const feat of feats) names.add(feat.name);
-    }
-  }
-  return [...names].sort();
-}
-
 // Plutonium's feat importer writes `locked` on AbilityScoreImprovement
 // advancements with the semantic "these are the abilities the feat commits
 // to" — but dnd5e reads `locked` as "these abilities are excluded from
 // selection". Result: a "+1 STR or DEX" feat imports as "spend on anything
-// EXCEPT STR/DEX." This helper inverts that field on any ASI advancement in
-// the stub compendium where `locked` has 1-3 entries (Plutonium's signature —
-// hand-authored ASIs usually have `locked: []`). Safe to re-run; already-
-// inverted ASIs won't match the 1-3 signature anymore.
+// EXCEPT STR/DEX." This helper inverts that field on any ASI advancement
+// where `locked` has 1-3 entries (Plutonium's signature — hand-authored
+// ASIs usually have `locked: []`). Safe to re-run; already-inverted ASIs
+// won't match the 1-3 signature anymore.
 const ALL_ABILITIES = ["str", "dex", "con", "int", "wis", "cha"];
 
 // Return every writable, world-scoped Item compendium — that's where a
@@ -249,39 +174,54 @@ async function writableWorldItemPacks() {
   return packs;
 }
 
-async function fixPlutoniumLockedFeats() {
+// Load every feat-type document from every writable world Item compendium
+// once. Both ASI fixers filter this same set; when they're chained through
+// `fixPlutoniumFeats` the shared load halves the compendium round-trips.
+// Returns an array of `{ doc, pack }` so callers keep the pack context for
+// display without a second lookup.
+async function loadPlutoniumFeatDocs() {
+  const packs = await writableWorldItemPacks();
+  if (!packs.length) return null;
+  const featDocs = [];
+  for (const pack of packs) {
+    const docs = await pack.getDocuments();
+    for (const doc of docs) {
+      if (doc.type !== "feat") continue;
+      featDocs.push({ doc, pack });
+    }
+  }
+  return featDocs;
+}
+
+async function fixPlutoniumLockedFeats(preloaded) {
   if (!game.user.isGM) {
     ui.notifications?.warn("Only GMs can fix imported feats.");
     return;
   }
-  const packs = await writableWorldItemPacks();
-  if (!packs.length) {
+  const featDocs = preloaded ?? await loadPlutoniumFeatDocs();
+  if (featDocs === null) {
     ui.notifications?.warn("No writable world-scoped Item compendia to scan.");
     return;
   }
 
   const changes = [];
-  for (const pack of packs) {
-    const docs = await pack.getDocuments();
-    for (const doc of docs) {
-      if (doc.type !== "feat") continue;
-      const advancement = doc._source?.system?.advancement;
-      if (!advancement) continue;
-      for (const [advId, adv] of Object.entries(advancement)) {
-        if (adv.type !== "AbilityScoreImprovement") continue;
-        const locked = adv.configuration?.locked;
-        if (!Array.isArray(locked)) continue;
-        if (locked.length < 1 || locked.length > 3) continue;
-        const inverted = ALL_ABILITIES.filter(a => !locked.includes(a));
-        changes.push({
-          doc,
-          advId,
-          name: doc.name,
-          packLabel: pack.metadata.label,
-          was: [...locked],
-          becomes: inverted
-        });
-      }
+  for (const { doc, pack } of featDocs) {
+    const advancement = doc._source?.system?.advancement;
+    if (!advancement) continue;
+    for (const [advId, adv] of Object.entries(advancement)) {
+      if (adv.type !== "AbilityScoreImprovement") continue;
+      const locked = adv.configuration?.locked;
+      if (!Array.isArray(locked)) continue;
+      if (locked.length < 1 || locked.length > 3) continue;
+      const inverted = ALL_ABILITIES.filter(a => !locked.includes(a));
+      changes.push({
+        doc,
+        advId,
+        name: doc.name,
+        packLabel: pack.metadata.label,
+        was: [...locked],
+        becomes: inverted
+      });
     }
   }
 
@@ -291,17 +231,17 @@ async function fixPlutoniumLockedFeats() {
   }
 
   const rows = changes.map(c =>
-    `<tr><td>${escape(c.name)}</td><td><code>[${c.was.join(", ")}]</code></td><td>→ <code>[${c.becomes.join(", ")}]</code></td></tr>`
+    `<tr><td>${escape(c.name)}</td><td style="color: var(--color-text-secondary, #888); font-size: 0.85em;">${escape(c.packLabel)}</td><td><code>[${c.was.join(", ")}]</code></td><td>→ <code>[${c.becomes.join(", ")}]</code></td></tr>`
   ).join("");
   const confirmed = await foundry.applications.api.DialogV2.confirm({
     window: { title: "Fix Plutonium-locked ASI Advancements" },
-    position: { width: 560 },
+    position: { width: 640 },
     content: `
       <div>
         <p>Found <strong>${changes.length}</strong> ASI advancement(s) with the inverted-<code>locked</code> signature. Apply the fix?</p>
         <div style="max-height: 360px; overflow-y: auto; border: 1px solid var(--color-border-highlight, #666); border-radius: 3px; padding: 4px;">
           <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-            <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666); position: sticky; top: 0; background: var(--color-bg-app, #222);"><th style="text-align:left; padding: 2px 4px;">Feat</th><th style="text-align:left; padding: 2px 4px;">Was</th><th style="text-align:left; padding: 2px 4px;">Becomes</th></tr></thead>
+            <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666); position: sticky; top: 0; background: var(--color-bg-app, #222);"><th style="text-align:left; padding: 2px 4px;">Feat</th><th style="text-align:left; padding: 2px 4px;">Pack</th><th style="text-align:left; padding: 2px 4px;">Was</th><th style="text-align:left; padding: 2px 4px;">Becomes</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>
@@ -324,10 +264,20 @@ async function fixPlutoniumLockedFeats() {
 
 // Combined helper — runs both ASI fixers in sequence. Wired into the
 // Prepare Knack Feats dialog and exposed via the settings menu button so
-// GMs have a single "Fix Plutonium Feats" affordance.
+// GMs have a single "Fix Plutonium Feats" affordance. Loads feat docs once
+// and hands the same set to each fixer to avoid a second compendium walk.
 async function fixPlutoniumFeats() {
-  await fixPlutoniumLockedFeats();
-  await fixPlutoniumOverpointedASIs();
+  if (!game.user.isGM) {
+    ui.notifications?.warn("Only GMs can fix imported feats.");
+    return;
+  }
+  const featDocs = await loadPlutoniumFeatDocs();
+  if (featDocs === null) {
+    ui.notifications?.warn("No writable world-scoped Item compendia to scan.");
+    return;
+  }
+  await fixPlutoniumLockedFeats(featDocs);
+  await fixPlutoniumOverpointedASIs(featDocs);
 }
 
 // Companion to the locked-inversion fix: Plutonium's imports sometimes set
@@ -336,32 +286,28 @@ async function fixPlutoniumFeats() {
 // RAW "+1 CON only." This helper zeroes `points` on any ASI where `fixed`
 // already grants ≥ 1 point. Signature makes it safe to co-exist with the
 // locked-inversion pass — different fields, different heuristic.
-async function fixPlutoniumOverpointedASIs() {
+async function fixPlutoniumOverpointedASIs(preloaded) {
   if (!game.user.isGM) {
     ui.notifications?.warn("Only GMs can fix imported feats.");
     return;
   }
-  const packs = await writableWorldItemPacks();
-  if (!packs.length) {
+  const featDocs = preloaded ?? await loadPlutoniumFeatDocs();
+  if (featDocs === null) {
     ui.notifications?.warn("No writable world-scoped Item compendia to scan.");
     return;
   }
 
   const changes = [];
-  for (const pack of packs) {
-    const docs = await pack.getDocuments();
-    for (const doc of docs) {
-      if (doc.type !== "feat") continue;
-      const advancement = doc._source?.system?.advancement;
-      if (!advancement) continue;
-      for (const [advId, adv] of Object.entries(advancement)) {
-        if (adv.type !== "AbilityScoreImprovement") continue;
-        const points = adv.configuration?.points ?? 0;
-        const fixed = adv.configuration?.fixed ?? {};
-        const fixedTotal = ALL_ABILITIES.reduce((sum, a) => sum + (fixed[a] ?? 0), 0);
-        if (points > 0 && fixedTotal >= 1) {
-          changes.push({ doc, advId, name: doc.name, packLabel: pack.metadata.label, wasPoints: points, fixedTotal });
-        }
+  for (const { doc, pack } of featDocs) {
+    const advancement = doc._source?.system?.advancement;
+    if (!advancement) continue;
+    for (const [advId, adv] of Object.entries(advancement)) {
+      if (adv.type !== "AbilityScoreImprovement") continue;
+      const points = adv.configuration?.points ?? 0;
+      const fixed = adv.configuration?.fixed ?? {};
+      const fixedTotal = ALL_ABILITIES.reduce((sum, a) => sum + (fixed[a] ?? 0), 0);
+      if (points > 0 && fixedTotal >= 1) {
+        changes.push({ doc, advId, name: doc.name, packLabel: pack.metadata.label, wasPoints: points, fixedTotal });
       }
     }
   }
@@ -372,17 +318,17 @@ async function fixPlutoniumOverpointedASIs() {
   }
 
   const rows = changes.map(c =>
-    `<tr><td>${escape(c.name)}</td><td><code>points: ${c.wasPoints}</code>, <code>fixed total: ${c.fixedTotal}</code></td><td>→ <code>points: 0</code></td></tr>`
+    `<tr><td>${escape(c.name)}</td><td style="color: var(--color-text-secondary, #888); font-size: 0.85em;">${escape(c.packLabel)}</td><td><code>points: ${c.wasPoints}</code>, <code>fixed total: ${c.fixedTotal}</code></td><td>→ <code>points: 0</code></td></tr>`
   ).join("");
   const confirmed = await foundry.applications.api.DialogV2.confirm({
     window: { title: "Fix Overpointed ASI Advancements" },
-    position: { width: 560 },
+    position: { width: 640 },
     content: `
       <div>
         <p>Found <strong>${changes.length}</strong> ASI advancement(s) where <code>fixed</code> already grants at least 1 point AND <code>points</code> is non-zero (Plutonium's double-grant signature). Zero out <code>points</code>?</p>
         <div style="max-height: 360px; overflow-y: auto; border: 1px solid var(--color-border-highlight, #666); border-radius: 3px; padding: 4px;">
           <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-            <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666); position: sticky; top: 0; background: var(--color-bg-app, #222);"><th style="text-align:left; padding: 2px 4px;">Feat</th><th style="text-align:left; padding: 2px 4px;">Was</th><th style="text-align:left; padding: 2px 4px;">Becomes</th></tr></thead>
+            <thead><tr style="border-bottom: 1px solid var(--color-border-highlight, #666); position: sticky; top: 0; background: var(--color-bg-app, #222);"><th style="text-align:left; padding: 2px 4px;">Feat</th><th style="text-align:left; padding: 2px 4px;">Pack</th><th style="text-align:left; padding: 2px 4px;">Was</th><th style="text-align:left; padding: 2px 4px;">Becomes</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>

@@ -17,8 +17,8 @@
 // UUIDs flow through immediately.
 
 import { MODULE_ID } from "./config.mjs";
+import { KNACK_ID_RE, verboseLog } from "./utils.mjs";
 
-const KNACK_ID_RE = /^k(14|24)([a-z]+)0*$/;
 const KNACK_PACK_ID = `${MODULE_ID}.child-knacks`;
 
 export function registerKnackPool() {
@@ -60,7 +60,7 @@ function patchFeatureLevelForKnackFeatPickers() {
   const originalPrep = flowProto._prepareContentContext;
   flowProto._prepareContentContext = async function(...args) {
     if (this.advancement?._id?.startsWith("advFeatPick")) {
-      console.log("[child-class] Knack feat picker render — bypassing prereqs.");
+      verboseLog("Knack feat picker render — bypassing prereqs.");
       inKnackFeatPickerRender = true;
       try {
         return await originalPrep.apply(this, args);

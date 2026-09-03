@@ -19,12 +19,7 @@
 import { MODULE_ID } from "./config.mjs";
 import { getAbilityRule } from "./ability-rules.mjs";
 import { CHILD_VARIANTS } from "./variants/index.mjs";
-
-const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"];
-const ABILITY_LABELS = {
-  str: "Strength", dex: "Dexterity", con: "Constitution",
-  int: "Intelligence", wis: "Wisdom", cha: "Charisma"
-};
+import { ABILITIES, ABILITY_LABELS, escape, resolveTargetActor } from "./utils.mjs";
 
 export function registerAbilityGen() {
   const module = game.modules.get(MODULE_ID);
@@ -37,6 +32,7 @@ export function registerAbilityGen() {
 
 function detectLevel1(item, options, userId) {
   if (userId !== game.user.id) return;
+  if (!game.settings.get(MODULE_ID, "autoFireDialogs")) return;
   if (item.type !== "class") return;
   if (!(item.system?.identifier in CHILD_VARIANTS)) return;
   const actor = item.parent;
@@ -61,7 +57,7 @@ export async function openRollDialog(actor) {
   const rule = getAbilityRule(actor);
   if (!rule?.base) {
     ui.notifications?.warn(
-      `Ability rule "${displayLabel(rule)}" is not fully specified (missing 'base' formula). Unremarkable ships as a stub — enable Unexceptional in the world settings, or wait for step 11.`
+      `Ability rule "${displayLabel(rule)}" is not fully specified (missing 'base' formula). Check the world's Ability score generation setting.`
     );
     return;
   }
@@ -105,8 +101,8 @@ async function confirmAndAssign(actor, rule, pool) {
   const options = pool.map(p => `<option value="${p.index}">${p.total}</option>`).join("");
   const abilityRows = ABILITIES.map(a => `
     <tr>
-      <td style="padding: 4px 12px 4px 0;">${ABILITY_LABELS[a]}</td>
-      <td><select name="ability-${a}" data-ability="${a}">
+      <td style="padding: 4px 12px 4px 0;"><label for="ability-${a}">${ABILITY_LABELS[a]}</label></td>
+      <td><select id="ability-${a}" name="ability-${a}" data-ability="${a}">
         <option value="">—</option>
         ${options}
       </select></td>
@@ -221,14 +217,3 @@ function displayLabel(rule) {
   return rule.label ?? (rule.id.charAt(0).toUpperCase() + rule.id.slice(1));
 }
 
-function resolveTargetActor() {
-  const controlled = canvas?.tokens?.controlled?.[0];
-  if (controlled?.actor) return controlled.actor;
-  return game.user.character ?? null;
-}
-
-function escape(s) {
-  return String(s ?? "").replace(/[&<>"']/g, ch => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
-  ));
-}

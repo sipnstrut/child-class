@@ -20,9 +20,9 @@
 import { MODULE_ID } from "./config.mjs";
 import { CHILD_VARIANTS } from "./variants/index.mjs";
 import { triggerGraduation } from "./graduation.mjs";
+import { KNACK_ID_RE } from "./utils.mjs";
 
 const CHILD_LEVEL_CAP = 5;
-const KNACK_ID_RE = /^k(14|24)([a-z]+)0*$/;
 
 export function registerGuards() {
   Hooks.on("preUpdateItem", enforceLevelCap);
@@ -49,8 +49,8 @@ function enforceAdvancementRules(advancementManager) {
       const identifier = cloneItem.system?.identifier;
       const isChild = identifier in CHILD_VARIANTS;
       result = isChild
-        ? checkAddChild(actor, identifier, cloneItem.name)
-        : checkAddNonChild(actor, cloneItem.name);
+        ? checkAddChild(actor, identifier)
+        : checkAddNonChild(actor);
     } else if (cloneItem.type === "background") {
       result = checkAddBackground(actor);
     }
@@ -99,8 +99,8 @@ function enforceCreationRules(item, data, options) {
   if (item.type === "class") {
     const identifier = item.system?.identifier;
     const isChild = identifier in CHILD_VARIANTS;
-    if (isChild) return checkAddChild(actor, identifier, item.name);
-    return checkAddNonChild(actor, item.name);
+    if (isChild) return checkAddChild(actor, identifier);
+    return checkAddNonChild(actor);
   }
 
   if (item.type === "background") {
@@ -113,7 +113,9 @@ function enforceCreationRules(item, data, options) {
   }
 }
 
-function checkAddChild(actor, editionIdentifier, itemName) {
+function checkAddChild(actor, editionIdentifier) {
+  const enforceMulticlass = game.settings.get(MODULE_ID, "enforceMulticlassBlock");
+
   // Rule 5: already graduated.
   if (actor.getFlag(MODULE_ID, "graduated")) {
     warn(`${actor.name} has already graduated. A GM must clear \`flags.child-class.graduated\` before this actor can become a Child again.`);
@@ -121,14 +123,18 @@ function checkAddChild(actor, editionIdentifier, itemName) {
   }
 
   // Rule 2: no Child multiclass in — reject if any non-Child class exists.
+  // Skipped when `enforceMulticlassBlock` is off (table opt-out).
   const existingClasses = actor.items.filter(i => i.type === "class");
-  const foreignClass = existingClasses.find(c => !(c.system?.identifier in CHILD_VARIANTS));
-  if (foreignClass) {
-    warn(`${actor.name} already holds the ${foreignClass.name} class. Child cannot multiclass in — a Child must have no other class levels.`);
-    return false;
+  if (enforceMulticlass) {
+    const foreignClass = existingClasses.find(c => !(c.system?.identifier in CHILD_VARIANTS));
+    if (foreignClass) {
+      warn(`${actor.name} already holds the ${foreignClass.name} class. Child cannot multiclass in — a Child must have no other class levels.`);
+      return false;
+    }
   }
 
-  // Rule 7: one edition per actor.
+  // Rule 7: one edition per actor. Enforced regardless of the multiclass
+  // toggle — mixing '14 and '24 on one actor is design-incoherent.
   const existingChild = existingClasses.find(c => c.system?.identifier in CHILD_VARIANTS);
   if (existingChild && existingChild.system.identifier !== editionIdentifier) {
     warn(`${actor.name} already holds ${existingChild.name}. Only one Child edition per actor — remove the existing one first.`);
@@ -153,7 +159,8 @@ function checkAddChild(actor, editionIdentifier, itemName) {
   }
 }
 
-function checkAddNonChild(actor, itemName) {
+function checkAddNonChild(actor) {
+  if (!game.settings.get(MODULE_ID, "enforceMulticlassBlock")) return;
   // Rule 3: no multiclass out — reject if actor has a Child class.
   const child = actor.items.find(i => i.type === "class" && i.system?.identifier in CHILD_VARIANTS);
   if (child) {

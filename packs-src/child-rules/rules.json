@@ -1,0 +1,87 @@
+{
+  "_id": "childRules00000000",
+  "_key": "!journal!childRules00000000",
+  "name": "Child Class — Rules & GM Guide",
+  "pages": [
+    {
+      "_id": "pageOverview00000",
+      "_key": "!journal.pages!childRules00000000.pageOverview00000",
+      "name": "The Child Class",
+      "type": "text",
+      "sort": 100000,
+      "text": {
+        "content": "<p><em>Every adventurer was somebody's child. Most stories skip that part.</em></p><p>The <strong>Child</strong> class is a five-level pre-adventurer track for D&D 5e. It ships as two sibling class items — <strong>Child '14</strong> (2014 rules) and <strong>Child '24</strong> (2024 rules) — plus two independent ability-generation rules (Unexceptional and Unremarkable) that either edition can use.</p><h2>What's different about a Child</h2><ul><li><strong>No hit die.</strong> Max HP is deterministic: <code>6 + CON mod</code> at level 1, <code>+1 + CON mod</code> per additional level, floored at 1.</li><li><strong>Reduced proficiency bonus.</strong> +1 at Child levels 1–2, +2 at levels 3–5.</li><li><strong>No standard array or point buy.</strong> Ability scores are rolled at creation on a bespoke formula (see the <em>Ability Rules</em> page), then all six abilities grow again at level 4.</li><li><strong>No background.</strong> A Child has <em>no background at all</em> until Graduation. See the <em>No Background</em> page for why this matters at your table.</li><li><strong>Graduation, not multiclassing.</strong> After Child level 5, the character loses the Child class entirely and becomes level 1 or 2 of a chosen class, gaining their first background in the process. See the <em>Graduation</em> page.</li></ul><h2>Class progression</h2><table><thead><tr><th>Level</th><th>Prof</th><th>Feature</th><th>Max HP</th></tr></thead><tbody><tr><td>1</td><td>+1</td><td>Youth, Ability generation</td><td>6 + CON</td></tr><tr><td>2</td><td>+1</td><td>The Knack (aspiring class + bonus feat)</td><td>7 + 2·CON</td></tr><tr><td>3</td><td>+2</td><td>Mentor's Knowledge (skill + save)</td><td>8 + 3·CON</td></tr><tr><td>4</td><td>+2</td><td>Growth (all six abilities grow)</td><td>9 + 4·CON</td></tr><tr><td>5</td><td>+2</td><td>Trade Skill (tool/lang + weapon + gold + item)</td><td>10 + 5·CON</td></tr></tbody></table>"
+      }
+    },
+    {
+      "_id": "pageEditions00000",
+      "_key": "!journal.pages!childRules00000000.pageEditions00000",
+      "name": "Editions ('14 vs '24)",
+      "type": "text",
+      "sort": 200000,
+      "text": {
+        "content": "<p>The Child class ships two sibling items in the compendium, one per D&D edition. Player character picks their Child edition; the rest of the class runs identically.</p><table><thead><tr><th>&nbsp;</th><th>Child '14</th><th>Child '24</th></tr></thead><tbody><tr><td>Rules baseline</td><td>2014 PHB + Tasha's</td><td>2024 PHB</td></tr><tr><td>Knack feat table</td><td>2014 flavor (Charger, Grappler, Tavern Brawler, …)</td><td>2024 flavor (Savage Attacker, Piercer, Musician, …)</td></tr><tr><td>Graduation target</td><td>2014 classes only</td><td>2024 classes only</td></tr></tbody></table><p>Both editions can use either ability-generation rule (Unexceptional or Unremarkable). That choice is a world setting; it's orthogonal to the edition.</p><h2>Cross-edition rules</h2><ul><li>A single actor may hold <strong>at most one</strong> Child edition. This is design-required, not a house-rule toggle.</li><li>A world may hold both editions of Children on different actors, unless the <em>Allow mixed editions in one world</em> setting is turned off.</li><li>Graduation is <strong>edition-locked</strong>: a '14 Child graduates into 2014 classes only; a '24 Child into 2024 classes only. Retained Knack feats are edition-specific and don't translate.</li></ul><h2>2024-specific quirks worth flagging at the table</h2><ul><li><strong>Subclass timing.</strong> In 2014, Cleric / Sorcerer / Warlock pick a subclass at level 1. In 2024, <em>all</em> classes wait until level 3. A '14 Child graduating into Cleric at level 1 picks a Divine Domain immediately; a '24 Child does not.</li><li><strong>Background feats.</strong> In 2024, backgrounds grant an Origin feat plus a +3 ability score spread. A '24 Child already carries a retained Knack feat, so a '24 graduate lands with two feats and an ASI bump. This is intentional per the design — the Knack feat is a <em>pure bonus</em>, not consuming an Origin slot — but call it out for your players before it happens.</li></ul>"
+      }
+    },
+    {
+      "_id": "pageAbility000000",
+      "_key": "!journal.pages!childRules00000000.pageAbility000000",
+      "name": "Ability Generation Rules",
+      "type": "text",
+      "sort": 300000,
+      "text": {
+        "content": "<p>Two named rules. Which one is active is a world setting, GM-overridable per actor via <code>flags.child-class.abilityRule</code>. Either rule works for either edition.</p><table><thead><tr><th>Rule</th><th>Base (level 1)</th><th>Growth (level 4)</th><th>Aptitude (2 picks, level 4)</th><th>Range at level 5</th></tr></thead><tbody><tr><td><strong>Unexceptional</strong> (default)</td><td><code>6 + 1d6</code> per ability → 7–12</td><td><code>1d6</code></td><td><code>2d6kh1</code></td><td>8–18</td></tr><tr><td><strong>Unremarkable</strong></td><td><code>7 + 1d4</code> per ability → 8–11</td><td><code>1d4</code></td><td><code>2d4kh1</code></td><td>9–15</td></tr></tbody></table><h2>Unexceptional</h2><p>The default. Wide, swingy, and capable of producing a genuinely hopeless Child. Meant for tables that lean into the source material's tone.</p><h2>Unremarkable</h2><p>Same mechanism, tighter dice. Raises the floor and lowers the ceiling. A Child under Unremarkable is never crippled and never gifted — which is the point: <em>unremarkable</em>, not <em>unlucky</em>.</p><h2>How rolling works</h2><ol><li>When the Child class is dropped on a fresh actor, the module rolls six values under the active rule.</li><li>The player <strong>assigns</strong> each rolled value to an ability of their choice.</li><li>The rule name is recorded on the actor. Changing the world setting later never retroactively alters an existing Child.</li></ol><h2>Growth (level 4)</h2><p>At Child level 4, every ability grows. The player picks <strong>two</strong> abilities to roll the rule's <em>aptitude</em> die on (the take-higher formula); the other four roll the normal growth die. All increases are permanent and clamped at the 20 cap.</p>"
+      }
+    },
+    {
+      "_id": "pageKnack00000000",
+      "_key": "!journal.pages!childRules00000000.pageKnack00000000",
+      "name": "The Knack (Level 2)",
+      "type": "text",
+      "sort": 400000,
+      "text": {
+        "content": "<p>At Child level 2 the player picks one of the 13 classes to <em>aspire to</em> — the character's imagined adult self. This choice is load-bearing: it also determines what Mentor's Knowledge grants at level 3, what Trade Skill grants at level 5, and whether Graduation starts the character at level 1 or 2.</p><h2>What the Knack does at level 2</h2><p>Grants <strong>one</strong> of two bonus feats associated with the aspiring class (see the compendium for each edition's table). Prerequisites are <strong>explicitly ignored</strong> — the Child gets the feat regardless of level or ability requirements.</p><p>The Knack feat is a <strong>pure bonus</strong>. It consumes no ASI, no Origin-feat slot, no other resource, at Child creation or after Graduation.</p><h2>Level 3 grants (Mentor's Knowledge)</h2><ul><li>One skill proficiency from the aspiring class's skill list.</li><li>One saving throw proficiency from the aspiring class's list.</li></ul><p>Both are lost on Graduation.</p><h2>Level 5 grants (Trade Skill's weapon)</h2><p>One weapon or shield proficiency from the aspiring class's list. Lost on Graduation.</p><h2>Notes</h2><ul><li>The two editions' Knack tables are separate. Sixteen feat names appear in both tables with materially different mechanics — the resolver keys on <em>(edition, class)</em>, never on feat name alone.</li><li>Some feats have pre-selected sub-options (Magic Initiate spell lists, Metamagic choices) that the Knack applies on grant rather than re-prompting.</li></ul>"
+      }
+    },
+    {
+      "_id": "pageNoBackground0",
+      "_key": "!journal.pages!childRules00000000.pageNoBackground0",
+      "name": "No Background (read this)",
+      "type": "text",
+      "sort": 500000,
+      "text": {
+        "content": "<p><strong>A Child has no background.</strong> This is a defining feature of the class, not an oversight. It holds for the entire five-level arc.</p><p>Every other 5e character has a background from creation, and the dnd5e character-creation flow assumes one. The Child is the exception — the character hasn't lived enough life to have one yet. The background arrives at Graduation, as part of growing up, and is the first one the character has ever had.</p><h2>What the Child loses</h2><ul><li>Background skill proficiencies</li><li>The background feature</li><li>Background starting equipment</li><li>Background languages</li></ul><p><strong>Species languages are unaffected.</strong> A Child speaks Common or their parents' tongue because of who their parents are, not because of the class. Trade Skill at level 5 may add one language; that's the only class involvement with languages.</p><h2>What this means at the table</h2><p>The module enforces the no-background rule:</p><ul><li>Attempts to drop a background item on a Child are blocked with a warning.</li><li>Attempts to drop the Child class on an actor who already has a background are blocked.</li><li>Graduation lifts the block so the graduation flow can add the character's first background.</li></ul><h2>Why '24 tables should read this twice</h2><p>Under 2024 rules, backgrounds are where ability score increases and the Origin feat come from. A '24 Child therefore has <em>no</em> ASI source at all during childhood — which is exactly why the class rolls its own scores via the ability rule and grows them again via Growth. It also means the background granted at graduation lands with unusual weight for a '24 character: both the retained Knack feat <em>and</em> the background's Origin feat, plus the +3 spread.</p>"
+      }
+    },
+    {
+      "_id": "pageXpProg0000000",
+      "_key": "!journal.pages!childRules00000000.pageXpProg0000000",
+      "name": "XP Progression & Pacing",
+      "type": "text",
+      "sort": 600000,
+      "text": {
+        "content": "<p>The Child runs on its own XP track. The whole five-level arc costs exactly what one RAW level-up costs — childhood is compressed into a single level's worth of XP, and Graduation lands the character at the starting line everyone else began at.</p><h2>Default table (raw-aligned)</h2><table><thead><tr><th>Child level</th><th>XP to reach</th><th>Cumulative</th></tr></thead><tbody><tr><td>1</td><td>—</td><td>0</td></tr><tr><td>2</td><td>30</td><td>30</td></tr><tr><td>3</td><td>45</td><td>75</td></tr><tr><td>4</td><td>60</td><td>135</td></tr><tr><td>5</td><td>75</td><td>210</td></tr><tr><td>Graduation</td><td>90</td><td>300</td></tr></tbody></table><p>Arithmetic, +15 per step. Level 1 is deliberately cheapest (an early death costs little); level 5 the longest (Trade Skill gets room, and Graduation feels earned). The 300 total is chosen so that a Child graduating into their Knack class arrives at RAW level 2 with no reconciliation needed.</p><h2>Alternative (compressed)</h2><p>Same shape, divided by three: <code>0 / 10 / 25 / 45 / 70 / 100</code>. Rounder, but see the encounter note below.</p><h2>Encounter design</h2><p>On the raw-aligned table you can use <strong>standard XP awards, unmodified</strong>. Awards are divided among the party, and that division does all the scaling needed.</p><p>The useful framing for the DM: <em>the whole five-level childhood costs about as many encounters as a normal party spends going from level 1 to level 2</em> — roughly 6–8 fights, one adventuring day's budget. Each Child level is one or two encounters.</p><p>Two caveats worth calling out:</p><ul><li><strong>Solo play runs fast.</strong> A lone Child receives undivided awards, so a solo prologue progresses about four times faster than a party of four. Scale awards down or run on milestones.</li><li><strong>Compressed needs custom awards.</strong> At 100 total, a party splitting a single CR ¼ creature gets more XP each than a full first-level's worth. If your table picks compressed, divide standard awards by about 3 or use milestones.</li></ul>"
+      }
+    },
+    {
+      "_id": "pageGraduation000",
+      "_key": "!journal.pages!childRules00000000.pageGraduation000",
+      "name": "Graduation (GM Guide)",
+      "type": "text",
+      "sort": 700000,
+      "text": {
+        "content": "<p>Graduation is a one-way destructive transformation. Treat it as a save-your-work moment.</p><h2>Trigger</h2><p>Graduation fires when a Child at level 5 attempts to level to 6. The module intercepts and opens the graduation dialog instead of advancing the level.</p><h2>What the module does automatically</h2><ol><li><strong>Snapshot.</strong> Writes the entire actor state to <code>flags.child-class.preGraduation</code>. This is your undo point.</li><li><strong>Retention summary.</strong> Shows a plain-English list of what will be kept, lost, and added, drawn from the actor's actual current state.</li><li><strong>Strip.</strong> On confirmation, removes the Child class item, Youth, Trade Skill, and the Knack item.</li><li><strong>Preserve.</strong> The Knack's bonus feat has its advancement-lineage flags stripped so it becomes an ordinary feat item on the sheet.</li><li><strong>Grant.</strong> Adds a <em>Graduate</em> keepsake feature summarizing what carried over.</li><li><strong>XP handling.</strong> Per the <em>XP handling at graduation</em> world setting: <em>carry</em> leaves the Child's XP total untouched (a Knack-match graduation lands at level 2 automatically); <em>reset</em> and <em>milestone</em> zero it.</li><li><strong>Full HP option.</strong> If <em>Full HP on graduation</em> is on, current HP is reset to max on the next prepare.</li></ol><h2>What the player does next</h2><p>Drag their new class from the compendium onto the sheet. dnd5e's normal advancement flow handles the level-up, subclass timing (if applicable), and background integration. The no-background guard is lifted for the actor.</p><h2>Retained mechanically</h2><ul><li>All ability scores (including Growth increases)</li><li>Currency and all items</li><li>The Knack's bonus feat (kept as a pure bonus)</li><li>The Trade Skill tool / language proficiency</li></ul><h2>Undo</h2><p>GMs can restore the pre-graduation snapshot at any time via <code>game.modules.get(\"child-class\").api.undoGraduation(actor)</code>. The snapshot lives on the actor until the <em>Graduation snapshot retention</em> setting's cutoff kicks in (0 = never auto-clear, the default).</p><h2>Cross-edition graduation</h2><p><strong>Disallowed.</strong> A '14 Child may only graduate into a 2014 class; a '24 Child only into a 2024 class. The Knack feats are edition-specific and don't carry across.</p>"
+      }
+    },
+    {
+      "_id": "pageDesignNotes00",
+      "_key": "!journal.pages!childRules00000000.pageDesignNotes00",
+      "name": "Design Notes",
+      "type": "text",
+      "sort": 800000,
+      "text": {
+        "content": "<p>Interpretations and choices worth documenting for GMs adapting the class to their table.</p><h2>Rolled scores by design</h2><p>The Child rolls scores rather than using point buy or the standard array because childhood is meant to be uneven. Some kids are gifted; some aren't. The class deliberately produces both, and Growth at level 4 lets the character reshape themselves after five sessions of play, in the direction the story pointed.</p><h2>The Knack is aspiration, not fate</h2><p>Picking Fighter as a Knack doesn't mean the character has to graduate into Fighter. It means they spent childhood <em>looking up to</em> a Fighter. Graduation into any class of the correct edition is allowed; matching the Knack just gets you level 2 for free via XP alignment. Non-Knack graduation is a valid narrative choice — the character wanted one thing and found another.</p><h2>Feats are pure bonuses</h2><p>Both the Knack feat and (under '24) the background's Origin feat are kept, without either displacing the other. This is deliberate. A Child has spent the character-creation-budget of a normal 1st-level character across five levels of play; the compensation is a slightly denser feat portfolio at graduation. If your table finds this too generous, dropping the Knack feat's retention is a reasonable house rule.</p><h2>Guard toggle</h2><p>The <em>Enforce multiclass block</em> setting exists for tables who want the Child as a flavor overlay rather than a hard mode — off, the multiclass guards relax and a Child can carry over a normal class from prior campaigns. The one-edition-per-actor guard stays on regardless.</p>"
+      }
+    }
+  ]
+}

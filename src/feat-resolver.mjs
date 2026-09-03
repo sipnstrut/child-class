@@ -13,16 +13,19 @@
 import { CHILD_VARIANTS } from "./variants/index.mjs";
 
 /**
- * Scan all enabled Item compendia + world items for a feat by name.
- * @param {string} name — feat name to search for
- * @param {object} [opts]
- * @param {string} [opts.edition] — variant.rules (e.g. "2014", "2024")
- * @param {string} [opts.source]  — knackTable source hint (e.g. "tasha")
- * @returns {Promise<{ uuid: string | null, candidates: object[] }>}
+ * Build a case-insensitive name → candidate[] index over every enabled Item
+ * compendium and every world-scoped Item. One pass over all packs; the caller
+ * looks up each Knack feat name against the returned Map, saving one full
+ * pack scan per feat compared to calling `resolveFeat` in a loop.
+ * @returns {Promise<Map<string, object[]>>}
  */
-export async function resolveFeat(name, { edition, source, matchName } = {}) {
-  const target = (matchName ?? name).trim().toLowerCase();
-  const candidates = [];
+export async function buildFeatIndex() {
+  const byName = new Map();
+  const push = (target, candidate) => {
+    const arr = byName.get(target);
+    if (arr) arr.push(candidate);
+    else byName.set(target, [candidate]);
+  };
 
   for (const pack of game.packs) {
     if (pack.metadata.type !== "Item") continue;
@@ -36,11 +39,11 @@ export async function resolveFeat(name, { edition, source, matchName } = {}) {
     }
     for (const entry of index) {
       if (entry.type !== "feat") continue;
-      if (entry.name?.trim().toLowerCase() !== target) continue;
-      candidates.push({
+      const target = entry.name?.trim().toLowerCase();
+      if (!target) continue;
+      push(target, {
         uuid: entry.uuid,
         packName: pack.metadata.label,
-        packId: pack.collection,
         rules: entry.system?.source?.rules,
         book: entry.system?.source?.book
       });
@@ -49,16 +52,37 @@ export async function resolveFeat(name, { edition, source, matchName } = {}) {
 
   for (const item of game.items ?? []) {
     if (item.type !== "feat") continue;
-    if (item.name?.trim().toLowerCase() !== target) continue;
-    candidates.push({
+    const target = item.name?.trim().toLowerCase();
+    if (!target) continue;
+    push(target, {
       uuid: item.uuid,
       packName: "World Items",
-      packId: "world",
       rules: item.system?.source?.rules,
       book: item.system?.source?.book
     });
   }
 
+  return byName;
+}
+
+/**
+ * Resolve one feat name against enabled compendia + world items.
+ * @param {string} name — display name from the knackTable entry
+ * @param {object} [opts]
+ * @param {string} [opts.edition]  — variant.rules ("2014" / "2024")
+ * @param {string} [opts.source]   — knackTable source hint ("tasha")
+ * @param {string} [opts.matchName]— override the name used for compendium
+ *   matching when the shipped item name differs from the display name
+ *   (e.g. "Magic Initiate: Druid" → matches "Magic Initiate")
+ * @param {Map<string, object[]>} [opts.index] — pre-built index from
+ *   `buildFeatIndex`; when omitted, one is built on the fly. Callers that
+ *   resolve many feats should build the index once and pass it in.
+ * @returns {Promise<{ uuid: string | null, candidates: object[] }>}
+ */
+export async function resolveFeat(name, { edition, source, matchName, index } = {}) {
+  const target = (matchName ?? name).trim().toLowerCase();
+  const featIndex = index ?? await buildFeatIndex();
+  const candidates = featIndex.get(target) ?? [];
   const ranked = rankCandidates(candidates, { edition, source });
   return { uuid: ranked[0]?.uuid ?? null, candidates: ranked };
 }
@@ -101,6 +125,7 @@ function looksTce(c) {
 export async function buildKnackFeatMap(rawByVariantId) {
   const map = {};
   const owner = rawByVariantId ?? (await loadRawVariants());
+  const index = await buildFeatIndex();
   for (const [variantId, variant] of Object.entries(CHILD_VARIANTS)) {
     if (!owner[variantId]?.knackTable) continue;
     map[variantId] = {};
@@ -110,7 +135,8 @@ export async function buildKnackFeatMap(rawByVariantId) {
         const r = await resolveFeat(feat.name, {
           edition: variant.rules,
           source: feat.source,
-          matchName: feat.matchName
+          matchName: feat.matchName,
+          index
         });
         map[variantId][classKey].push({
           name: feat.name,

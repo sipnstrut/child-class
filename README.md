@@ -45,12 +45,67 @@ Packs** sidebar → **Create Compendium** → **Item** type, name it e.g.
 `Feats`) and point Plutonium's Item / Feat import target at it. Not
 required — the Advancement-Backing Compendium works just as well.
 
-### 2. Import the Knack feats via Plutonium
+### 2. Import the Knack feats
 
-Open Plutonium's feat browser / importer. Import the 26 feats listed in
-[docs/design.md § 5.4](docs/design.md#54-the-knack-level-2) (or the subset
-your table plans to allow). They land in whichever compendium you targeted
-in step 1.
+Bring the 26 feats named in the Knack tables into any world-scoped Item
+compendium. Any of these paths work — the resolver is source-agnostic:
+
+- **Plutonium** — open the feat browser, import each name. Set Plutonium's
+  Item / Feat import target to your world compendium (from step 1).
+- **The dnd5e SRD compendiums** — many Knack feats ship natively in
+  `dnd5e.classfeatures` / `dnd5e.feats24`. If they're already visible in
+  your compendium sidebar, no import needed — the resolver will find them.
+- **Manual** — right-click your world compendium → Create Item → Feat, name
+  it exactly, author its advancement chain. Tedious but always works.
+- **Any other module** — anything that lands a feat item with the right
+  name in any enabled Item compendium is scan-able.
+
+The `ᵀᶜᴱ` marking on a few entries means "prefer the Tasha's Cauldron of
+Everything version if you have both editions imported."
+
+**'14 (2014 rules) — 26 feats total, 13 pairs:**
+
+| Aspiring class | Feat A | Feat B |
+|---|---|---|
+| Barbarian | Charger | Grappler |
+| Bard | Defensive Duelist | Actor |
+| Cleric | Healer | Chef |
+| Druid | Magic Initiate | Poisoner |
+| Fighter | Tough | Fighting Initiate |
+| Monk | Tavern Brawler | Martial Adept |
+| Paladin | Inspiring Leader | Mounted Combatant |
+| Ranger | Dungeon Delver | Keen Mind |
+| Rogue | Skulker | Skill Expert ᵀᶜᴱ |
+| Sorcerer | Magic Initiate | Metamagic Adept ᵀᶜᴱ |
+| Warlock | Magic Initiate | Linguist |
+| Wizard | Ritual Caster | Elemental Adept |
+| Artificer | Magic Initiate ᵀᶜᴱ | Gunner ᵀᶜᴱ |
+
+**'24 (2024 rules) — 26 feats total, 13 pairs:**
+
+| Aspiring class | Feat A | Feat B |
+|---|---|---|
+| Barbarian | Savage Attacker | Tough |
+| Bard | Musician | Defensive Duelist |
+| Cleric | Healer | Chef |
+| Druid | Magic Initiate | Poisoner |
+| Fighter | Durable | Piercer |
+| Monk | Athlete | Blind Fighting |
+| Paladin | Inspiring Leader | Mounted Combatant |
+| Ranger | Skilled | Observant |
+| Rogue | Skulker | Skill Expert ᵀᶜᴱ |
+| Sorcerer | Elemental Adept | Metamagic Adept ᵀᶜᴱ |
+| Warlock | Actor | Telepathic ᵀᶜᴱ |
+| Wizard | Ritual Caster | Keen Mind |
+| Artificer | Crafter | Gunner ᵀᶜᴱ |
+
+Sixteen feat names appear in both tables — the resolver keys on
+`(edition, name)` so a '14 Child gets the 2014 version of Tough and a '24
+Child gets the 2024 version, without them colliding.
+
+You don't need all 52 slots filled to play — a table that only cares about
+half the classes can import half the pairs and see the missing entries as
+"missing" in the Prepare Knack Feats dialog.
 
 ### 3. Resolve the Knack feat pools
 

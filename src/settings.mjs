@@ -80,6 +80,20 @@ const SETTING_DESCRIPTORS = [
     hint: "CHILDCLASS.Settings.AllowMixedEditions.Hint",
     type: Boolean,
     default: true
+  }],
+
+  ["autoFireDialogs", {
+    name: "CHILDCLASS.Settings.AutoFireDialogs.Name",
+    hint: "CHILDCLASS.Settings.AutoFireDialogs.Hint",
+    type: Boolean,
+    default: true
+  }],
+
+  ["verboseLogging", {
+    name: "CHILDCLASS.Settings.VerboseLogging.Name",
+    hint: "CHILDCLASS.Settings.VerboseLogging.Hint",
+    type: Boolean,
+    default: false
   }]
 ];
 

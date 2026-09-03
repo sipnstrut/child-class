@@ -12,11 +12,11 @@
 
 import { MODULE_ID } from "./config.mjs";
 import { CHILD_VARIANTS } from "./variants/index.mjs";
+import { ABILITIES } from "./utils.mjs";
 
-const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"];
 const CLEARED_FLAGS = [
   "scoresRolled", "growthApplied", "tradeSkillApplied",
-  "abilityRule", "unchainedPotential", "knack",
+  "abilityRule", "knack",
   "preChildAbilities"
 ];
 

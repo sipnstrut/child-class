@@ -33,13 +33,13 @@
 
 import { MODULE_ID } from "./config.mjs";
 import { CHILD_VARIANTS } from "./variants/index.mjs";
+import { KNACK_ID_RE, escape, resolveTargetActor } from "./utils.mjs";
 
 const CHILD_LEVEL_CAP = 5;
 const YOUTH_ID = "featYouth0000000";
 const TRADE_SKILL_ID = "featTradeSkill00";
 const GRADUATE_ID = "featGraduate0000";
 const GRADUATE_UUID = `Compendium.${MODULE_ID}.child-features.Item.${GRADUATE_ID}`;
-const KNACK_ID_RE = /^k(14|24)([a-z]+)0*$/;
 
 export function registerGraduation() {
   const module = game.modules.get(MODULE_ID);
@@ -48,6 +48,28 @@ export function registerGraduation() {
     module.api.graduate = openGraduationDialog;
     module.api.undoGraduation = undoGraduation;
   }
+  if (game.user.isGM) sweepExpiredSnapshots();
+}
+
+// Honor the `snapshotRetentionDays` setting: on world ready, clear any
+// `flags.child-class.preGraduation` older than the configured cutoff. 0 =
+// never auto-clear (default). Runs once per world load, GM-only.
+async function sweepExpiredSnapshots() {
+  const days = game.settings.get(MODULE_ID, "snapshotRetentionDays");
+  if (!days || days <= 0) return;
+  const cutoff = Date.now() - (days * 86_400_000);
+  let cleared = 0;
+  for (const actor of game.actors) {
+    const snap = actor.getFlag(MODULE_ID, "preGraduation");
+    if (!snap?.timestamp || snap.timestamp >= cutoff) continue;
+    try {
+      await actor.unsetFlag(MODULE_ID, "preGraduation");
+      cleared++;
+    } catch (err) {
+      console.warn(`[child-class] Failed to clear stale graduation snapshot on ${actor.name}:`, err);
+    }
+  }
+  if (cleared) console.log(`[child-class] Cleared ${cleared} pre-graduation snapshot(s) older than ${days} day(s).`);
 }
 
 /* ---------------------------------- Trigger ----------------------------------- */
@@ -185,7 +207,7 @@ async function executeGraduation(actor, variant) {
     // preGraduation and preChildAbilities for undo / history).
     const knackKey = actor.getFlag(MODULE_ID, "knack") ?? findKnackClassKey(actor) ?? null;
     const bonusFeatName = bonusFeat?.name ?? null;
-    await actor.update({
+    const updates = {
       [`flags.${MODULE_ID}.graduated`]: {
         from: variant.id,
         childLevel,
@@ -197,7 +219,25 @@ async function executeGraduation(actor, variant) {
       [`flags.${MODULE_ID}.-=growthApplied`]: null,
       [`flags.${MODULE_ID}.-=tradeSkillApplied`]: null,
       [`flags.${MODULE_ID}.-=abilityRule`]: null
-    });
+    };
+
+    // XP handling per world setting. `carry` = do nothing (XP stays as-is,
+    // Knack-match graduation naturally lands at level 2 via the RAW 300
+    // threshold). `reset` and `milestone` both zero XP so the new class
+    // starts from the level-1 baseline.
+    const xpMode = game.settings.get(MODULE_ID, "xpOnGraduation");
+    if (xpMode === "reset" || xpMode === "milestone") {
+      updates["system.details.xp.value"] = 0;
+    }
+
+    // Heal-on-graduation: null out `hp.value` so `prepareHitPoints` resets
+    // to max on the next prepare (once the new class lands and computes
+    // its own HP baseline).
+    if (game.settings.get(MODULE_ID, "healOnGraduation")) {
+      updates["system.attributes.hp.value"] = null;
+    }
+
+    await actor.update(updates);
 
     await broadcastGraduationCard(actor, variant, { knack: knackKey, bonusFeat: bonusFeatName, childLevel });
   } finally {
@@ -313,14 +353,3 @@ async function broadcastGraduationCard(actor, variant, details) {
   });
 }
 
-function resolveTargetActor() {
-  const controlled = canvas?.tokens?.controlled?.[0];
-  if (controlled?.actor) return controlled.actor;
-  return game.user.character ?? null;
-}
-
-function escape(s) {
-  return String(s ?? "").replace(/[&<>"']/g, ch => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
-  ));
-}

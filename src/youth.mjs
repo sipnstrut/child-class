@@ -6,7 +6,7 @@
 // `.use()` — that path handles the healing roll, the HP write, the uses
 // decrement, and the chat card in one call.
 
-import { MODULE_ID } from "./config.mjs";
+import { escape } from "./utils.mjs";
 
 const YOUTH_ID = "featYouth0000000";
 
@@ -56,8 +56,3 @@ function firstActivity(item) {
   return activities.contents?.[0] ?? [...activities][0]?.[1] ?? null;
 }
 
-function escape(s) {
-  return String(s ?? "").replace(/[&<>"']/g, ch => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
-  ));
-}
