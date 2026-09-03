@@ -22,6 +22,14 @@ export function registerKnackSetup() {
     module.api.fixPlutoniumOverpointedASIs = fixPlutoniumOverpointedASIs;
     module.api.fixPlutoniumFeats = fixPlutoniumFeats;
   }
+  game.settings.registerMenu(MODULE_ID, "prepareKnackFeats", {
+    name: "Prepare Knack Feats",
+    label: "Prepare Knack Feats",
+    hint: "Scan every enabled Item compendium for the feats named in the Child Knack tables, resolve UUIDs, and patch each Knack item's bonus-feat pool. Run once after importing feats (SRD, Plutonium, or hand-authored); re-run any time you import more.",
+    icon: "fas fa-hat-wizard",
+    type: PrepareKnackFeatsMenuButton,
+    restricted: true
+  });
   game.settings.registerMenu(MODULE_ID, "fixPlutoniumFeats", {
     name: "Fix Plutonium Feats",
     label: "Fix Plutonium Feats",
@@ -36,7 +44,7 @@ export function registerKnackSetup() {
   const map = game.settings.get(MODULE_ID, "knackFeatMap");
   if (game.user.isGM && (!map || Object.keys(map).length === 0)) {
     ui.notifications?.info(
-      "Child Class: no feats resolved yet. Run `game.modules.get(\"child-class\").api.prepareKnackFeats()` from the console (F12) to set up Knack bonus feats."
+      "Child Class: no feats resolved yet. Open Configure Settings → Module Settings → Child Class → Prepare Knack Feats to set up Knack bonus feats."
     );
   }
 }
@@ -145,6 +153,13 @@ function statusCell(feat) {
 class PlutoniumFixerMenuButton extends foundry.applications.api.ApplicationV2 {
   async render() {
     await fixPlutoniumFeats();
+    return this;
+  }
+}
+
+class PrepareKnackFeatsMenuButton extends foundry.applications.api.ApplicationV2 {
+  async render() {
+    await openDialog();
     return this;
   }
 }

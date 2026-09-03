@@ -4,6 +4,21 @@ All notable changes to the Child Class Foundry VTT module. Dates use ISO-8601.
 Version numbers follow semver relative to a hypothetical `1.0.0`; expect
 `0.x` versions to shift shape as the module iterates toward a stable API.
 
+## v0.3.2 — 2026-09-03
+
+### Added
+
+- **Prepare Knack Feats** appears as its own button under Configure
+  Settings → Module Settings → Child Class. New recipients no longer
+  have to open F12 to run the scan. The console API remains available.
+
+### Changed
+
+- First-load nudge notification now points at the settings button
+  instead of the console command.
+- README's setup step 3 leads with the button; the console command is
+  shown as an alternative.
+
 ## v0.3.1 — 2026-09-02
 
 Audit follow-up pass (Phase 6 documentation) — corrections only, no behavior

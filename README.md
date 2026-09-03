@@ -109,17 +109,22 @@ half the classes can import half the pairs and see the missing entries as
 
 ### 3. Resolve the Knack feat pools
 
-```js
-await game.modules.get("child-class").api.prepareKnackFeats()
-```
+Open **Game Settings → Configure Settings → Module Settings → Child Class**
+and click **Prepare Knack Feats**.
 
 A dialog opens showing every Knack feat and where it resolved to (pack +
 edition). Anything marked `missing` isn't in a scan-able compendium yet —
-import it via Plutonium and hit **Rescan**.
+import it and click **Rescan**.
 
 The scan writes a UUID map to the `knackFeatMap` world setting and patches
 each Knack item's bonus-feat pool in memory. Level-2 Knack Bonus Feat
 pickers now show the correct 2 options per aspiring class.
+
+Console equivalent, if you prefer:
+
+```js
+await game.modules.get("child-class").api.prepareKnackFeats()
+```
 
 ### 4. Fix Plutonium's ASI configuration quirks
 
