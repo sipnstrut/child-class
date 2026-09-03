@@ -33,6 +33,7 @@ export default {
     druid: [
       {
         name: "Magic Initiate: Druid",
+        matchName: "Magic Initiate",
         preSelect: { cantrips: ["druidcraft", "guidance"], spells: ["animal friendship"] }
       },
       { name: "Poisoner" }
@@ -63,6 +64,7 @@ export default {
     sorcerer: [
       {
         name: "Magic Initiate: Sorcerer",
+        matchName: "Magic Initiate",
         preSelect: { cantrips: ["minor illusion", "prestidigitation"], spells: ["sleep"] }
       },
       {
@@ -74,6 +76,7 @@ export default {
     warlock: [
       {
         name: "Magic Initiate: Warlock",
+        matchName: "Magic Initiate",
         preSelect: { cantrips: ["mage hand", "true strike"], spells: ["mage armor"] }
       },
       { name: "Linguist" }
@@ -81,6 +84,7 @@ export default {
     wizard: [
       {
         name: "Ritual Caster: Wizard",
+        matchName: "Ritual Caster",
         preSelect: { spells: ["detect magic", "find familiar"] }
       },
       { name: "Elemental Adept" }
@@ -88,6 +92,7 @@ export default {
     artificer: [
       {
         name: "Magic Initiate: Artificer",
+        matchName: "Magic Initiate",
         source: "tasha",
         preSelect: { cantrips: ["mending"], spells: ["alarm"], toolChoice: true }
       },

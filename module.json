@@ -2,13 +2,13 @@
   "id": "child-class",
   "title": "Child Class",
   "description": "The Child class for D&D 5e — five pre-adventurer levels with non-standard hit points, proficiency, ability scores, and no background, ending in Graduation into a standard class. Ships '14 and '24 editions.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "authors": [
     { "name": "Sip n Strut" }
   ],
   "url": "https://github.com/sipnstrut/child-class",
   "manifest": "https://github.com/sipnstrut/child-class/releases/latest/download/module.json",
-  "download": "https://github.com/sipnstrut/child-class/releases/download/v0.2.2/child-class.zip",
+  "download": "https://github.com/sipnstrut/child-class/releases/download/v0.2.3/child-class.zip",
   "compatibility": {
     "minimum": "13",
     "verified": "14"

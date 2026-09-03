@@ -20,8 +20,8 @@ import { CHILD_VARIANTS } from "./variants/index.mjs";
  * @param {string} [opts.source]  — knackTable source hint (e.g. "tasha")
  * @returns {Promise<{ uuid: string | null, candidates: object[] }>}
  */
-export async function resolveFeat(name, { edition, source } = {}) {
-  const target = name.trim().toLowerCase();
+export async function resolveFeat(name, { edition, source, matchName } = {}) {
+  const target = (matchName ?? name).trim().toLowerCase();
   const candidates = [];
 
   for (const pack of game.packs) {
@@ -109,7 +109,8 @@ export async function buildKnackFeatMap(rawByVariantId) {
       for (const feat of feats) {
         const r = await resolveFeat(feat.name, {
           edition: variant.rules,
-          source: feat.source
+          source: feat.source,
+          matchName: feat.matchName
         });
         map[variantId][classKey].push({
           name: feat.name,

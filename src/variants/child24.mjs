@@ -29,6 +29,7 @@ export default {
     druid: [
       {
         name: "Magic Initiate: Druid",
+        matchName: "Magic Initiate",
         preSelect: { cantrips: ["druidcraft", "guidance"], spells: ["animal friendship"] }
       },
       { name: "Poisoner" }
