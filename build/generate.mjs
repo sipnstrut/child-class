@@ -207,10 +207,22 @@ function saveTrait(classKey) {
   };
 }
 
+// dnd5e's Trait choices UI namespaces weapons by category — a specific
+// weapon in a pool needs `weapon:<sim|mar>:<id>`, not just `weapon:<id>`.
+// The bare form only appears in the trait-key label helper (keyLabel) and
+// won't render as an option in the picker. Categorize each weapon id.
+const SIMPLE_WEAPON_IDS = new Set([
+  "club", "dagger", "dart", "greatclub", "handaxe", "javelin", "lighthammer",
+  "mace", "quarterstaff", "sickle", "spear", "lightcrossbow", "sling"
+]);
+function weaponTraitKey(id) {
+  return SIMPLE_WEAPON_IDS.has(id) ? `weapon:sim:${id}` : `weapon:mar:${id}`;
+}
+
 function weaponTrait(classKey) {
   const cls = KNACK_CLASSES[classKey];
   const pool = [
-    ...cls.weapons.map(w => `weapon:${w}`),
+    ...cls.weapons.map(weaponTraitKey),
     ...(cls.shield ? ["armor:shl"] : [])
   ];
   return {
