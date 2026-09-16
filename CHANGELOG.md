@@ -4,6 +4,50 @@ All notable changes to the Child Class Foundry VTT module. Dates use ISO-8601.
 Version numbers follow semver relative to a hypothetical `1.0.0`; expect
 `0.x` versions to shift shape as the module iterates toward a stable API.
 
+## v0.3.4 — 2026-09-15
+
+### Added
+
+- **Unit tests** (`tests/`, `npm test`). Node's built-in runner, no new
+  dependencies. 33 cases over the HP/proficiency override and the Knack
+  feat-pool injection — the two paths below, both of which shipped broken
+  because nothing but a live Foundry could see them. Verified to fail
+  against the pre-fix code.
+- **CI** (`.github/workflows/ci.yml`) runs `npm test` on pushes to `main`
+  and on pull requests. No install step: the suite imports only from `src/`,
+  and the one devDependency exists for `npm run pack`, which CI skips.
+
+### Changed
+
+- **A Knack's feat pool is refreshed when it disagrees with `knackFeatMap`,
+  not just filled when empty.** An actor's copy of a Knack keeps whatever
+  pool was baked in when the item was added, so re-running Prepare Knack
+  Feats — after importing a closer-matching feat, say — used to leave
+  existing characters on the old UUIDs indefinitely. A pool the map has
+  nothing to say about is still left alone, so wiping the map cannot strip
+  a character's existing options.
+
+### Fixed
+
+- **Knack bonus-feat pool was empty for everyone but the GM who had just
+  run Prepare Knack Feats.** The resolved pool was injected only into the
+  compendium's cached documents, and `CompendiumCollection` flushes that
+  cache 300 seconds after the pack was last touched
+  (`CACHE_LIFETIME_SECONDS`). Past that window the advancement was cloned
+  from freshly refetched source data — empty pool, `allowDrops` back to
+  `true`. The GM tested inside the window; players, patched once at
+  `ready`, were always outside it. The pool is now also injected at render
+  time from the `knackFeatMap` setting (`ensureKnackPool`), which no cache
+  can expire. The `ready`/dialog compendium patch stays for reads that
+  never reach the advancement flow, such as the compendium browser preview.
+- **Feats granting bonus max HP did nothing on a Child.** `applyChildOverrides`
+  replaced `hp.max` outright, discarding the
+  `hp.bonuses.level × character level + hp.bonuses.overall` term that
+  dnd5e had already folded in. Tough (`+2` on `system.attributes.hp.bonuses.level`)
+  was the reported case; Dwarven Toughness, Aid, and hand-entered bonuses
+  were affected the same way. Those bonuses are now added back into the
+  Child HP formula.
+
 ## v0.3.3 — 2026-09-03
 
 ### Removed

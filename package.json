@@ -7,7 +7,8 @@
   "scripts": {
     "generate": "node build/generate.mjs",
     "pack": "npm run generate && node build/pack.mjs pack",
-    "unpack": "node build/pack.mjs unpack"
+    "unpack": "node build/pack.mjs unpack",
+    "test": "node --test"
   },
   "devDependencies": {
     "@foundryvtt/foundryvtt-cli": "^1.0.0"

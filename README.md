@@ -217,6 +217,7 @@ docs/
 src/                Module code
 packs-src/          Hand-authored JSON for compendium packs
 build/              Pack build tooling (foundryvtt-cli via build/pack.mjs)
+tests/              Unit tests (node:test, no dependencies)
 lang/en.json        English strings
 module.json         Foundry manifest
 ```
@@ -228,7 +229,26 @@ Build:
 ```bash
 npm install
 npm run pack        # rebuild packs/ from packs-src/ via foundryvtt-cli
+npm test            # unit tests
 ```
+
+Tests run on Node's built-in runner, so they need no dependency beyond Node
+itself — `npm test` works in a fresh worktree before `npm install`. They cover
+the pure logic that a live Foundry would otherwise be the only way to check:
+the HP/proficiency override and the Knack feat-pool injection.
+`tests/helpers/stubs.mjs` stands in for the handful of `game` / `dnd5e` /
+`libWrapper` globals those paths read; the source files touch globals only
+inside functions, never at module scope, which is what makes that possible.
+Keep it that way.
+
+Anything that depends on Foundry actually running — compendium loading, the
+advancement flow, ActiveEffect application — is out of reach here and belongs
+in the § 13 acceptance list in `docs/design.md` instead.
+
+`.github/workflows/ci.yml` runs `npm test` on pushes to `main` and on pull
+requests. It deliberately has no install step, which is only safe while the
+suite stays dependency-free — if a test ever needs a package, add `npm ci`
+to the workflow in the same commit.
 
 ## Credit
 
