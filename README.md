@@ -245,6 +245,11 @@ Anything that depends on Foundry actually running — compendium loading, the
 advancement flow, ActiveEffect application — is out of reach here and belongs
 in the § 13 acceptance list in `docs/design.md` instead.
 
+`.github/workflows/ci.yml` runs `npm test` on pushes to `main` and on pull
+requests. It deliberately has no install step, which is only safe while the
+suite stays dependency-free — if a test ever needs a package, add `npm ci`
+to the workflow in the same commit.
+
 ## Credit
 
 Child class by Joseph Avery, Sip 'n' Strut — *Humble Beginnings* (DMs Guild,

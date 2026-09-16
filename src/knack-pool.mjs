@@ -69,10 +69,10 @@ function patchFeatureLevelForKnackFeatPickers() {
   flowProto._prepareContentContext = async function(...args) {
     if (this.advancement?._id?.startsWith("advFeatPick")) {
       verboseLog("Knack feat picker render — bypassing prereqs.");
-      if (ensureKnackPool(this.advancement) && !this.pool?.length) {
-        // An earlier render may have cached an empty `this.pool`; the flow
-        // fills it with `??=`, which will not refill a non-nullish empty
-        // array. Clear it so the freshly injected pool is read.
+      if (ensureKnackPool(this.advancement)) {
+        // The flow fills `this.pool` with `??=`, which will not refill a
+        // non-nullish value — so an earlier render's copy, empty or stale,
+        // would survive. Clear it whenever the pool was actually written.
         this.pool = undefined;
       }
       inKnackFeatPickerRender = true;
@@ -192,12 +192,19 @@ function poolFor(map, { variantId, classKey }) {
  * Injecting at render time is independent of the cache, so it holds for any
  * client at any point in the session.
  *
+ * A populated pool is not assumed current. The actor's copy of a Knack keeps
+ * whatever pool was baked in when the item was added, so re-running Prepare
+ * Knack Feats — after importing a better-matching feat, say — would otherwise
+ * leave existing characters pointed at the old UUIDs forever. Any pool that
+ * disagrees with the map is replaced.
+ *
  * @param {Advancement} advancement — the ItemChoice advancement being rendered
- * @returns {boolean} — true when a pool was injected
+ * @returns {boolean} — true when the pool was written, whether filled or
+ *   refreshed. The caller must discard any cached copy of it.
  */
 export function ensureKnackPool(advancement) {
   const config = advancement?.configuration;
-  if (!config || config.pool?.length) return false;
+  if (!config) return false;
 
   const item = advancement.item;
   // dnd5e's own source-id chain (see its `_stats.compendiumSource ??
@@ -215,12 +222,29 @@ export function ensureKnackPool(advancement) {
   const pool = poolFor(map, identity);
   if (!pool.length) return false;
 
+  const stale = config.pool?.length ?? 0;
+  if (samePool(config.pool, pool)) return false;
+
   config.pool = pool;
   config.allowDrops = false;
   verboseLog(
-    `Injected ${pool.length} feat(s) into the ${identity.variantId}/${identity.classKey} Knack pool at render.`
+    stale
+      ? `Refreshed the ${identity.variantId}/${identity.classKey} Knack pool at render: ${stale} stale feat(s) -> ${pool.length}.`
+      : `Injected ${pool.length} feat(s) into the ${identity.variantId}/${identity.classKey} Knack pool at render.`
   );
   return true;
+}
+
+/**
+ * Whether a pool already matches what the map resolves to. Order matters: the
+ * map preserves knackTable order, so a reordering is a real change.
+ * @param {{uuid: string}[]|undefined} current
+ * @param {{uuid: string}[]} next
+ * @returns {boolean}
+ */
+function samePool(current, next) {
+  if ((current?.length ?? 0) !== next.length) return false;
+  return next.every((entry, i) => current[i]?.uuid === entry.uuid);
 }
 
 export async function patchKnackPools() {

@@ -9,10 +9,23 @@ Version numbers follow semver relative to a hypothetical `1.0.0`; expect
 ### Added
 
 - **Unit tests** (`tests/`, `npm test`). Node's built-in runner, no new
-  dependencies. 29 cases over the HP/proficiency override and the Knack
+  dependencies. 33 cases over the HP/proficiency override and the Knack
   feat-pool injection — the two paths below, both of which shipped broken
   because nothing but a live Foundry could see them. Verified to fail
   against the pre-fix code.
+- **CI** (`.github/workflows/ci.yml`) runs `npm test` on pushes to `main`
+  and on pull requests. No install step: the suite imports only from `src/`,
+  and the one devDependency exists for `npm run pack`, which CI skips.
+
+### Changed
+
+- **A Knack's feat pool is refreshed when it disagrees with `knackFeatMap`,
+  not just filled when empty.** An actor's copy of a Knack keeps whatever
+  pool was baked in when the item was added, so re-running Prepare Knack
+  Feats — after importing a closer-matching feat, say — used to leave
+  existing characters on the old UUIDs indefinitely. A pool the map has
+  nothing to say about is still left alone, so wiping the map cannot strip
+  a character's existing options.
 
 ### Fixed
 

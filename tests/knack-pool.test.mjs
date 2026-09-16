@@ -59,12 +59,64 @@ describe("ensureKnackPool", () => {
     assert.deepEqual(adv.configuration.pool, [{ uuid: "Compendium.world.feats.Item.ccc" }]);
   });
 
-  test("leaves an already-populated pool alone", () => {
-    const existing = [{ uuid: "Compendium.world.feats.Item.zzz" }];
-    const adv = makeKnackAdvancement(KNACK("k24fighter000000"), { pool: existing });
+  test("leaves a pool that already matches the map alone", () => {
+    const current = [
+      { uuid: "Compendium.world.feats.Item.aaa" },
+      { uuid: "Compendium.world.feats.Item.bbb" }
+    ];
+    const adv = makeKnackAdvancement(KNACK("k24fighter000000"), { pool: current });
 
-    assert.equal(ensureKnackPool(adv), false);
-    assert.deepEqual(adv.configuration.pool, existing);
+    assert.equal(ensureKnackPool(adv), false, "no write, so the caller keeps its cached copy");
+    assert.deepEqual(adv.configuration.pool, current);
+  });
+
+  describe("refreshing a stale pool", () => {
+    // An actor's Knack keeps whatever pool was baked in when the item was
+    // added, so re-running Prepare Knack Feats has to reach existing sheets.
+    test("replaces uuids that no longer match the map", () => {
+      const adv = makeKnackAdvancement(KNACK("k24fighter000000"), {
+        pool: [{ uuid: "Compendium.world.feats.Item.OLD" }]
+      });
+
+      assert.equal(ensureKnackPool(adv), true);
+      assert.deepEqual(adv.configuration.pool, [
+        { uuid: "Compendium.world.feats.Item.aaa" },
+        { uuid: "Compendium.world.feats.Item.bbb" }
+      ]);
+    });
+
+    test("treats a reordered pool as a change", () => {
+      const adv = makeKnackAdvancement(KNACK("k24fighter000000"), {
+        pool: [
+          { uuid: "Compendium.world.feats.Item.bbb" },
+          { uuid: "Compendium.world.feats.Item.aaa" }
+        ]
+      });
+
+      assert.equal(ensureKnackPool(adv), true);
+      assert.equal(adv.configuration.pool[0].uuid, "Compendium.world.feats.Item.aaa");
+    });
+
+    test("notices a feat added to the map", () => {
+      const adv = makeKnackAdvancement(KNACK("k14bard000000000"), {
+        pool: [{ uuid: "Compendium.world.feats.Item.ccc" }]
+      });
+      settings["child-class.knackFeatMap"].child14.bard.push({
+        name: "Ritual Caster",
+        uuid: "Compendium.world.feats.Item.ddd"
+      });
+
+      assert.equal(ensureKnackPool(adv), true);
+      assert.equal(adv.configuration.pool.length, 2);
+    });
+
+    test("does not wipe a pool when the map has nothing to offer", () => {
+      const current = [{ uuid: "Compendium.world.feats.Item.OLD" }];
+      const adv = makeKnackAdvancement(KNACK("k24wizard000000"), { pool: current });
+
+      assert.equal(ensureKnackPool(adv), false);
+      assert.deepEqual(adv.configuration.pool, current, "a wiped map must not strip existing picks");
+    });
   });
 
   test("ignores an item that is not one of our Knacks", () => {
