@@ -6,6 +6,14 @@ Version numbers follow semver relative to a hypothetical `1.0.0`; expect
 
 ## v0.3.4 — 2026-09-15
 
+### Added
+
+- **Unit tests** (`tests/`, `npm test`). Node's built-in runner, no new
+  dependencies. 29 cases over the HP/proficiency override and the Knack
+  feat-pool injection — the two paths below, both of which shipped broken
+  because nothing but a live Foundry could see them. Verified to fail
+  against the pre-fix code.
+
 ### Fixed
 
 - **Knack bonus-feat pool was empty for everyone but the GM who had just
