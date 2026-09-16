@@ -873,3 +873,42 @@ against Foundry v14 / dnd5e 5.3.3 during the v0.1.0 – v0.2.x work.
   `Math.max(0, Math.min(level, table.length - 1))` on the Child table,
   and delegates to the wrapped original for non-Child actors — so the
   vanilla array's exact length never affects our path.
+
+### Post-release findings (v0.3.4)
+
+Two bugs found together, both cases of a value being computed correctly and
+then discarded. Recorded here because neither is visible from the design doc.
+
+- **Compendium documents are cached for 300 seconds, not for the session.**
+  `CompendiumCollection` holds loaded documents in a Collection whose `clear`
+  is debounced by `CACHE_LIFETIME_SECONDS = 300`, re-armed on every `get` /
+  `set` (`client/documents/collections/compendium-collection.mjs:82,286,322`).
+  An in-memory `updateSource` on a compendium document — the technique
+  `patchKnackPools` uses to inject the resolved feat pool without writing to
+  LevelDB — therefore survives only until the pack goes untouched for five
+  minutes. This read as a permissions bug ("works for the GM, not for
+  players") because the GM runs Prepare Knack Feats and tests immediately,
+  while players are patched once at `ready` and open the picker much later.
+  It is not a permissions bug: module packs and Plutonium's world compendia
+  both default to `{PLAYER: "OBSERVER", ASSISTANT: "OWNER"}`
+  (`common/packages/base-package.mjs:115-123`), and `getUserLevel` resolves a
+  role via `user.hasRole(role)`, so TRUSTED inherits the PLAYER grant
+  (`compendium-collection.mjs:432`). Anything that must hold at pick time
+  belongs at the flow, not in the pack cache — see `ensureKnackPool`.
+  One nuance worth knowing: `clear()` spares documents with a rendered app,
+  so an open compendium sheet keeps its patch and masks the problem further.
+
+- **Overwriting `hp.max` discards dnd5e's HP bonus term.**
+  `CharacterData.prepareDerivedData` adds
+  `simplifyBonus(hp.bonuses.level, rollData) * details.level +
+  simplifyBonus(hp.bonuses.overall, rollData)` to `hp.max`
+  (`dnd5e.mjs:72135-72139`) before `AttributesFields.prepareHitPoints` runs.
+  `src/hp.mjs` writes `hp.max` after the whole prepare cycle, so it has to
+  re-add that term itself or silently drop it. Tough is the feat that exposed
+  this — dnd5e 5.3.3 ships no Tough, so the live one comes from Plutonium and
+  is authored correctly as an AE of `+2` on
+  `system.attributes.hp.bonuses.level`. `dnd5e.utils.simplifyBonus` is
+  exported on the `dnd5e` global (`dnd5e.mjs:1494`, `82352`) and is the right
+  helper to reuse, since the bonuses are formula strings.
+  Note that effect `changes` live at `system.changes`, not `changes`, in
+  Foundry v14 / dnd5e 5.x — an ActiveEffect now has a system data model.

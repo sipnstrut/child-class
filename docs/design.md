@@ -690,6 +690,10 @@ Author packs as JSON under `packs-src/`, build to LevelDB with `@foundryvtt/foun
 11. Negative CON modifier: HP never drops below 1.
 12. Run with the SRD only, **no feats imported** → stub feats appear, nothing throws, GM warning surfaces.
 13. Run the § 7.2 setup workflow against a Plutonium install → all 26 feats resolve, map persists across a world reload.
+13a. Then wait out the compendium cache (`CompendiumCollection.CACHE_LIFETIME_SECONDS`, 300s) without touching the
+    Knack pack, and open the picker again — as a **player**, not the GM who ran the workflow. The pool must still be
+    populated. Item 13 alone passes even when the pool only survives inside that window, which is how the bug fixed
+    in v0.3.4 shipped.
 14. Confirm no fixed-6 ability generation and no per-level all-ability increase exists anywhere in the codebase (§ 5.3 note) — the removed rule should leave no trace.
 15. Run both ability rules end to end on each edition: Unexceptional scores 7–12 at level 1 and 8–18 at level 5; Unremarkable scores 8–11 and 9–15.
 16. Growth pair: confirm the picks recorded in `flags.child-class.growthChoice` use the variant's `growthChoice` die formula and the other four abilities use `growth`. There is no world setting to gate the pair on — it is always available.

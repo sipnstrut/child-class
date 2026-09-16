@@ -35,12 +35,13 @@ function applyChildOverrides(actor) {
   if (level < 1) return;
 
   const conMod = actor.system?.abilities?.con?.mod ?? 0;
-  const rawHp = variant.hpFirst + (level - 1) * variant.hpPerLevel + level * conMod;
+  const hp = actor.system.attributes.hp;
+  const rawHp = variant.hpFirst + (level - 1) * variant.hpPerLevel + level * conMod
+    + maxHpBonus(actor, hp, level);
   const hpMax = Math.max(1, rawHp);
 
   const prof = variant.profByLevel[level - 1] ?? variant.profByLevel.at(-1);
 
-  const hp = actor.system.attributes.hp;
   hp.max = hpMax;
   // Recompute the derived hp fields prepareHitPoints computed against the old
   // hp.max — the sheet renders these, not hp.max directly for damage/pct.
@@ -58,4 +59,41 @@ function applyChildOverrides(actor) {
     : 0;
 
   actor.system.attributes.prof = prof;
+}
+
+/**
+ * Max-HP bonuses that dnd5e folded into `hp.max` before we overwrite it.
+ *
+ * `CharacterData.prepareDerivedData` computes
+ *   `simplifyBonus(hp.bonuses.level) * details.level + simplifyBonus(hp.bonuses.overall)`
+ * and adds it to `hp.max`. Because `applyChildOverrides` replaces `hp.max`
+ * outright rather than adjusting it, that term was being discarded — so any
+ * effect targeting `system.attributes.hp.bonuses.*` silently did nothing on a
+ * Child. Tough (an AE of `+2` on `hp.bonuses.level`) is the one that surfaced
+ * it; Dwarven Toughness, Aid, and a hand-entered bonus all went the same way.
+ *
+ * The per-level bonus multiplies by *character* level, not Child level, which
+ * matches dnd5e and stays correct if `enforceMulticlassBlock` is off.
+ *
+ * @param {Actor5e} actor
+ * @param {object} hp — `actor.system.attributes.hp`, post-prepare
+ * @param {number} level — Child class level, the fallback for character level
+ * @returns {number}
+ */
+function maxHpBonus(actor, hp, level) {
+  const perLevel = hp?.bonuses?.level;
+  const overall = hp?.bonuses?.overall;
+  // Both default to "", so the common case costs nothing — worth guarding,
+  // since this runs on every prepareData pass.
+  if (!perLevel && !overall) return 0;
+
+  const simplifyBonus = globalThis.dnd5e?.utils?.simplifyBonus;
+  if (!simplifyBonus) return 0;
+
+  // Safe to build roll data here: we run after the wrapped `prepareData` has
+  // returned, so the actor is fully prepared.
+  const rollData = actor.getRollData({ deterministic: true });
+  const characterLevel = actor.system?.details?.level || level;
+  return (simplifyBonus(perLevel, rollData) * characterLevel)
+    + simplifyBonus(overall, rollData);
 }
