@@ -284,6 +284,8 @@ The effect must be attached to the class item so that deleting the class on grad
 
 Standard 5e gives +2 at character levels 1–4, so only levels 1–2 actually deviate. Implement as an override on `system.attributes.prof` applied only when the actor's sole class is `child14` or `child24`. **Verify** whether an AE reaches `prof` before it is consumed by skill/save/attack derivation; if not, a prepare-phase hook is required.
 
+**Resolved (dnd5e 5.3.3):** it does not. `CharacterData.prepareBaseData` sets `prof`, and `prepareDerivedData` bakes it into every skill, save, tool and initiative total. The module therefore wraps `CharacterData#prepareBaseData` and sets the Child's `prof` straight after it, and writes it once more after `Actor#prepareData` so nothing in between has the last word. Setting it only at the end left the sheet showing the standard +2 in every total while rolls, which read `@prof` fresh, used the Child's.
+
 **Acceptance test:** a level-1 Child's dagger attack bonus, passive perception, and save DCs all reflect +1, not +2.
 
 ### 5.3 Ability score generation

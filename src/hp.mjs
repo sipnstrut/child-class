@@ -11,28 +11,54 @@
 // wrapped Actor5e method still lets `CharacterData.prepareDerivedData` clobber
 // `hp.max` afterwards. Writing after `prepareData` finishes has the last word
 // and we recompute the derived hp fields the sheet reads.
+//
+// `prof` cannot wait that long. `CharacterData.prepareBaseData` sets it, and
+// `prepareDerivedData` then bakes it into every skill, save, tool and
+// initiative total the sheet shows. Written only at the end, the sheet showed
+// History +3 for INT 12 and a +1 Child proficiency -- the standard +2 -- while
+// the roll, which reads `@prof` fresh, came out +1+1. So proficiency is also
+// set straight after `prepareBaseData`, before anything is derived from it.
 
 import { MODULE_ID } from "./config.mjs";
 import { getChildVariant } from "./variants/index.mjs";
 
+export const PREPARE_BASE_TARGET = "CONFIG.Actor.dataModels.character.prototype.prepareBaseData";
+export const PREPARE_DATA_TARGET = "CONFIG.Actor.documentClass.prototype.prepareData";
+
 export function registerHpAndProf() {
-  const target = "CONFIG.Actor.documentClass.prototype.prepareData";
-  libWrapper.register(MODULE_ID, target, function(wrapped, ...args) {
+  libWrapper.register(MODULE_ID, PREPARE_BASE_TARGET, function(wrapped, ...args) {
+    const result = wrapped.apply(this, args);
+    const child = childLevel(this.parent);
+    if (child) this.attributes.prof = childProf(child);
+    return result;
+  }, "WRAPPER");
+  libWrapper.register(MODULE_ID, PREPARE_DATA_TARGET, function(wrapped, ...args) {
     const result = wrapped.apply(this, args);
     applyChildOverrides(this);
     return result;
   }, "WRAPPER");
 }
 
-function applyChildOverrides(actor) {
-  if (actor?.type !== "character") return;
+/** The actor's Child variant and Child level, or null when it is not a Child. */
+function childLevel(actor) {
+  if (actor?.type !== "character") return null;
   const variant = getChildVariant(actor);
-  if (!variant) return;
+  if (!variant) return null;
   const cls = actor.items.find(
     i => i.type === "class" && i.system?.identifier === variant.id
   );
   const level = cls?.system?.levels ?? 0;
-  if (level < 1) return;
+  return level >= 1 ? { variant, level } : null;
+}
+
+function childProf({ variant, level }) {
+  return variant.profByLevel[level - 1] ?? variant.profByLevel.at(-1);
+}
+
+function applyChildOverrides(actor) {
+  const child = childLevel(actor);
+  if (!child) return;
+  const { variant, level } = child;
 
   const conMod = actor.system?.abilities?.con?.mod ?? 0;
   const hp = actor.system.attributes.hp;
@@ -40,7 +66,7 @@ function applyChildOverrides(actor) {
     + maxHpBonus(actor, hp, level);
   const hpMax = Math.max(1, rawHp);
 
-  const prof = variant.profByLevel[level - 1] ?? variant.profByLevel.at(-1);
+  const prof = childProf(child);
 
   hp.max = hpMax;
   // Recompute the derived hp fields prepareHitPoints computed against the old
@@ -58,6 +84,8 @@ function applyChildOverrides(actor) {
     ? Math.max(0, Math.min(100, (hp.value / hp.effectiveMax) * 100))
     : 0;
 
+  // Already set after prepareBaseData; written again so nothing in between
+  // -- an Active Effect on `prof`, another module -- has the last word.
   actor.system.attributes.prof = prof;
 }
 

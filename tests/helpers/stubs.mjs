@@ -44,14 +44,15 @@ export function installDnd5e({ withSimplifyBonus = true } = {}) {
 }
 
 /**
- * Install a `libWrapper` stub that captures the registered wrapper instead of
- * patching anything, so a test can call it directly.
- * @returns {() => Function} — returns the most recently registered wrapper
+ * Install a `libWrapper` stub that captures each registered wrapper by target
+ * instead of patching anything, so a test can call one directly.
+ * @returns {(target?: string) => Function} — the wrapper registered on
+ *   `target`, by default `Actor#prepareData`'s
  */
 export function captureLibWrapper() {
-  let registered;
-  globalThis.libWrapper = { register: (_id, _target, fn) => { registered = fn; } };
-  return () => registered;
+  const registered = new Map();
+  globalThis.libWrapper = { register: (_id, target, fn) => { registered.set(target, fn); } };
+  return (target = "CONFIG.Actor.documentClass.prototype.prepareData") => registered.get(target);
 }
 
 /**

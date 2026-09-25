@@ -6,6 +6,15 @@ Version numbers follow semver relative to a hypothetical `1.0.0`; expect
 
 ## Unreleased
 
+### Fixed
+
+- **The sheet's skill, save, tool and initiative totals use the Child's
+  proficiency.** The override wrote `prof` only after the whole prepare
+  cycle, and dnd5e had already derived every total from the standard +2. So
+  a level-1 Child with INT 12 and History showed +3 while the roll, which
+  reads `@prof` fresh, came out +1+1. `prof` is now set right after
+  `CharacterData#prepareBaseData`, before anything is derived from it.
+
 ### Changed
 
 - **The '24 Rogue and Warlock Knacks take the 2024 PHB feats.** Skill

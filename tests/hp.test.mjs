@@ -16,7 +16,7 @@ import {
   captureLibWrapper,
   makeChildActor
 } from "./helpers/stubs.mjs";
-import { registerHpAndProf } from "../src/hp.mjs";
+import { registerHpAndProf, PREPARE_BASE_TARGET } from "../src/hp.mjs";
 
 let getWrapper;
 
@@ -133,6 +133,40 @@ describe("Child HP override", () => {
       };
 
       assert.deepEqual([1, 2, 3, 4, 5].map(profAt), [1, 1, 2, 2, 2]);
+    });
+
+    // The sheet regression: dnd5e sets `prof` in CharacterData.prepareBaseData
+    // and bakes it into skill totals in prepareDerivedData. Set only at the end
+    // of prepareData, the sheet showed History +3 for INT 12 on a level-1
+    // Child (the standard +2) while the roll, reading @prof fresh, was +1+1.
+    /** Run the prepareBaseData wrapper the way dnd5e would: base sets prof. */
+    function prepareBase(actor) {
+      const system = { parent: actor, attributes: actor.system.attributes };
+      getWrapper(PREPARE_BASE_TARGET).call(system, () => {
+        system.attributes.prof = 2 + Math.floor((actor.system.details.level - 1) / 4);
+      });
+      return system;
+    }
+
+    test("is the Child's before anything is derived from it", () => {
+      const system = prepareBase(makeChildActor({ level: 1 }));
+
+      assert.equal(system.attributes.prof, 1);
+      const historyTotal = 1 /* INT 12 */ + system.attributes.prof;
+      assert.equal(historyTotal, 2, "the sheet's History total for INT 12, proficient");
+    });
+
+    test("follows the curve at base-data time too", () => {
+      const profAt = level => prepareBase(makeChildActor({ level })).attributes.prof;
+
+      assert.deepEqual([1, 2, 3, 4, 5].map(profAt), [1, 1, 2, 2, 2]);
+    });
+
+    test("leaves a non-Child's proficiency to dnd5e", () => {
+      const actor = makeChildActor({ level: 5 });
+      actor.items = [{ type: "class", identifier: "fighter", system: { identifier: "fighter", levels: 5 } }];
+
+      assert.equal(prepareBase(actor).attributes.prof, 3);
     });
   });
 });
