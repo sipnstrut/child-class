@@ -93,9 +93,9 @@ Everything version if you have both editions imported."
 | Monk | Athlete | Blind Fighting |
 | Paladin | Inspiring Leader | Mounted Combatant |
 | Ranger | Skilled | Observant |
-| Rogue | Skulker | Skill Expert ᵀᶜᴱ |
+| Rogue | Skulker | Skill Expert |
 | Sorcerer | Elemental Adept | Metamagic Adept ᵀᶜᴱ |
-| Warlock | Actor | Telepathic ᵀᶜᴱ |
+| Warlock | Actor | Telepathic |
 | Wizard | Ritual Caster | Keen Mind |
 | Artificer | Crafter | Gunner ᵀᶜᴱ |
 

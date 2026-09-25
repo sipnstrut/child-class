@@ -4,6 +4,17 @@ All notable changes to the Child Class Foundry VTT module. Dates use ISO-8601.
 Version numbers follow semver relative to a hypothetical `1.0.0`; expect
 `0.x` versions to shift shape as the module iterates toward a stable API.
 
+## Unreleased
+
+### Changed
+
+- **The '24 Rogue and Warlock Knacks take the 2024 PHB feats.** Skill
+  Expert and Telepathic lose their `source: "tasha"` marking in the '24
+  table, so the resolver picks the 2024 printing by edition. TCE stands only
+  where the 2024 PHB prints no feat of the same name; Metamagic Adept and
+  Gunner keep it. Matches the Codex canon (Codex 1.3.0) and the sipnstrut
+  Child page. The '14 table is unchanged.
+
 ## v0.3.4 — 2026-09-15
 
 ### Added

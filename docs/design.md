@@ -370,13 +370,13 @@ The Child class item's level-2 advancement is a single `ItemChoice` pointing at 
 | Monk | d8 | Athlete | Blind Fighting |
 | Paladin | d10 | Inspiring Leader | Mounted Combatant |
 | Ranger | d10 | Skilled | Observant |
-| Rogue | d8 | Skulker | Skill Expert ᵀᶜᴱ |
+| Rogue | d8 | Skulker | Skill Expert |
 | Sorcerer | d6 | Elemental Adept | Metamagic Adept ᵀᶜᴱ |
-| Warlock | d8 | Actor | Telepathic ᵀᶜᴱ |
+| Warlock | d8 | Actor | Telepathic |
 | Wizard | d6 | Ritual Caster | Keen Mind |
 | Artificer | d8 | Crafter | Gunner ᵀᶜᴱ |
 
-ᵀᶜᴱ = sourced from *Tasha's Cauldron of Everything*. The resolver must honour that marking rather than assuming a same-named 2024 PHB entry (§ 7.3).
+ᵀᶜᴱ = sourced from *Tasha's Cauldron of Everything*. The resolver must honour that marking rather than assuming a same-named 2024 PHB entry (§ 7.3). TCE is a non-core source approved for this table, and it stands only where the 2024 PHB prints no feat of the same name (2026-09-25): Skill Expert and Telepathic are in the 2024 PHB, so the '24 Child takes those printings. The 2014 table keeps TCE's Skill Expert.
 
 **Pre-selected sub-options.** Where the source fixes a choice inside a feat, the Knack item pre-applies it rather than re-prompting:
 

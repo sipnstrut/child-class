@@ -13,6 +13,9 @@ export default {
   // § 5.4 '24 Knack table. `preSelect` carries source-fixed sub-options that
   // the Knack item pre-applies rather than re-prompting. `source: "tasha"`
   // marks TCE entries; the feat resolver (§ 7.3) prefers Tasha's when named.
+  // TCE stands only where the 2024 PHB prints no feat of the same name
+  // (2026-09-25): Skill Expert and Telepathic are in it, so they resolve by
+  // edition like the rest; Metamagic Adept and Gunner are TCE-only.
   knackTable: {
     barbarian: [
       { name: "Savage Attacker" },
@@ -52,7 +55,7 @@ export default {
     ],
     rogue: [
       { name: "Skulker" },
-      { name: "Skill Expert", source: "tasha" }
+      { name: "Skill Expert" }
     ],
     sorcerer: [
       { name: "Elemental Adept" },
@@ -64,7 +67,7 @@ export default {
     ],
     warlock: [
       { name: "Actor" },
-      { name: "Telepathic", source: "tasha" }
+      { name: "Telepathic" }
     ],
     wizard: [
       { name: "Ritual Caster" },
