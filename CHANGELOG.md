@@ -4,7 +4,7 @@ All notable changes to the Child Class Foundry VTT module. Dates use ISO-8601.
 Version numbers follow semver relative to a hypothetical `1.0.0`; expect
 `0.x` versions to shift shape as the module iterates toward a stable API.
 
-## Unreleased
+## v0.3.5 — 2026-09-25
 
 ### Fixed
 
